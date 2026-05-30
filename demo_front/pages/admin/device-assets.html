@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>设备资产管理 - EdgeFall 管理后台</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/admin.css">
+  <link rel="stylesheet" href="../../css/pages/device-assets.css">
+</head>
+<body class="admin-layout">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">&#9731;</div>
+      <span class="logo-text">EdgeFall 管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <span class="nav-icon">&#9632;</span> 仪表盘
+      </a>
+      <a class="nav-item active">
+        <span class="nav-icon">&#9881;</span> 设备管理
+      </a>
+      <a class="nav-item" href="organization.html">
+        <span class="nav-icon">&#9733;</span> 组织架构
+      </a>
+      <a class="nav-item" href="api-monitor.html">
+        <span class="nav-icon">&#9783;</span> API监控
+      </a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-right">
+        <span class="header-user"><strong>管理员</strong> | 超级管理员</span>
+        <a href="../village/alert-board.html" class="btn btn-sm btn-switch">村委会端</a>
+        <a href="../login.html" class="btn btn-sm">退出</a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- 设备分类 Tab -->
+      <div class="device-tabs">
+        <button class="device-tab active" onclick="switchDeviceTab('all', this)">全部</button>
+        <button class="device-tab" onclick="switchDeviceTab('wristband', this)">手环</button>
+        <button class="device-tab" onclick="switchDeviceTab('gateway', this)">网关</button>
+        <button class="device-tab" onclick="switchDeviceTab('camera', this)">摄像头</button>
+      </div>
+
+      <!-- 工具栏 -->
+      <div class="device-toolbar">
+        <div class="toolbar-left">
+          <input type="text" class="form-input" placeholder="搜索设备编号/MAC..." style="max-width:240px">
+          <button class="btn">搜索</button>
+        </div>
+        <div class="toolbar-right" style="display:flex;gap:var(--spacing-sm);">
+          <button class="btn">批量导入</button>
+          <button class="btn">导出 CSV</button>
+        </div>
+      </div>
+
+      <!-- 设备表格 -->
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>设备编号</th>
+            <th>类型</th>
+            <th>MAC / SN</th>
+            <th>所属村庄</th>
+            <th>绑定老人</th>
+            <th>入库时间</th>
+            <th>在线状态</th>
+            <th>电量/信号</th>
+            <th>操作</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><strong>DEV-001</strong></td>
+            <td><span class="tag tag-info">手环</span></td>
+            <td>A4:C1:38:D2:F1:01</td>
+            <td>桂花村</td>
+            <td>张奶奶</td>
+            <td>2026-01-15</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>85% / 强</td>
+            <td>—</td>
+          </tr>
+          <tr class="row-danger">
+            <td><strong>DEV-002</strong></td>
+            <td><span class="tag tag-info">手环</span></td>
+            <td>A4:C1:39:A1:E2:02</td>
+            <td>桂花村</td>
+            <td>王大爷</td>
+            <td>2026-01-15</td>
+            <td><span class="tag tag-danger">离线</span></td>
+            <td>8% <span class="tag tag-danger">低电</span></td>
+            <td><button class="btn btn-sm btn-primary" onclick="openRebind('DEV-002','手环','A4:C1:39:A1:E2:02')">换绑</button></td>
+          </tr>
+          <tr>
+            <td><strong>DEV-003</strong></td>
+            <td><span class="tag tag-warning">网关</span></td>
+            <td>GW-A01</td>
+            <td>桂花村</td>
+            <td>—</td>
+            <td>2026-01-10</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>运行 3,120h</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>DEV-004</strong></td>
+            <td><span class="tag tag-info">手环</span></td>
+            <td>A4:C1:40:B3:F4:03</td>
+            <td>桂花村</td>
+            <td>李奶奶</td>
+            <td>2026-02-20</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>92% / 强</td>
+            <td>—</td>
+          </tr>
+          <tr class="row-danger">
+            <td><strong>DEV-005</strong></td>
+            <td><span class="tag tag-warning">网关</span></td>
+            <td>GW-A03</td>
+            <td>杨柳村</td>
+            <td>—</td>
+            <td>2026-03-01</td>
+            <td><span class="tag tag-danger">离线</span></td>
+            <td>离线 3h <span class="tag tag-danger">告警</span></td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>DEV-006</strong></td>
+            <td><span class="tag tag-info">手环</span></td>
+            <td>A4:C1:41:C5:D6:04</td>
+            <td>杨柳村</td>
+            <td>刘爷爷</td>
+            <td>2026-03-15</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>78% / 中</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>DEV-007</strong></td>
+            <td><span class="tag tag-info">手环</span></td>
+            <td>A4:C1:42:E7:F8:05</td>
+            <td>石门村</td>
+            <td>陈奶奶</td>
+            <td>2026-04-01</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>64% / 中</td>
+            <td>—</td>
+          </tr>
+          <tr>
+            <td><strong>DEV-008</strong></td>
+            <td><span class="tag">摄像头</span></td>
+            <td>EZ-202403001</td>
+            <td>桂花村</td>
+            <td>—</td>
+            <td>2026-03-20</td>
+            <td><span class="tag tag-success">在线</span></td>
+            <td>正常</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="pagination">
+        <button disabled>&laquo;</button>
+        <button class="active">1</button>
+        <button>2</button>
+        <button>&raquo;</button>
+      </div>
+    </main>
+  </div>
+
+  <!-- 换绑弹窗 -->
+  <div class="modal-overlay" id="rebindModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>设备换绑 - <span id="rebindDeviceId"></span></h3>
+        <button class="modal-close" onclick="closeRebind()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="bind-form">
+          <div class="form-group">
+            <label>旧设备 MAC</label>
+            <input type="text" class="form-input" id="rebindOldMac" disabled>
+          </div>
+          <div class="form-group">
+            <label>新设备 MAC 地址 <span style="color:var(--color-danger)">*</span></label>
+            <input type="text" class="form-input" id="newMac" placeholder="请输入新设备的 MAC 地址">
+          </div>
+          <p style="font-size:13px;color:var(--color-text-secondary);background:#F5F7FA;padding:8px;border-radius:var(--radius-sm);">
+            &#9432; 换绑后，老人的历史健康监测数据将自动关联到新设备，不会丢失。
+          </p>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeRebind()">取消</button>
+        <button class="btn btn-primary" onclick="submitRebind()">确认换绑</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/device-assets.js"></script>
+</body>
+</html>

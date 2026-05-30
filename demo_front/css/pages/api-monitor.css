@@ -1,0 +1,171 @@
+/* ========================================
+   API 监控台 - 双栏布局
+   ======================================== */
+
+.monitor-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+}
+
+.monitor-panel {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.monitor-panel .panel-header {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.monitor-panel .panel-body {
+  padding: var(--spacing-lg);
+}
+
+/* 环形进度 */
+.ring-progress {
+  text-align: center;
+  margin-bottom: var(--spacing-lg);
+}
+
+.ring-svg {
+  transform: rotate(-90deg);
+}
+
+.ring-bg {
+  fill: none;
+  stroke: #E4E7ED;
+  stroke-width: 8;
+}
+
+.ring-fill {
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 1s ease;
+}
+
+.ring-center-text {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  text-align: center;
+}
+
+.ring-center-text .big-num {
+  font-size: 36px;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.ring-center-text .pct-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.ring-wrap {
+  position: relative;
+  display: inline-block;
+}
+
+/* 用量统计 */
+.usage-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+}
+
+.usage-stat {
+  text-align: center;
+  padding: var(--spacing-sm);
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+}
+
+.usage-stat .stat-num {
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.usage-stat .stat-label {
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  margin-top: 2px;
+}
+
+/* Token 表格 */
+.token-table {
+  width: 100%;
+  margin-bottom: var(--spacing-md);
+}
+
+.token-table th, .token-table td {
+  padding: 8px 12px;
+  text-align: left;
+  font-size: 13px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.token-table th {
+  color: var(--color-text-secondary);
+  font-weight: 500;
+}
+
+/* 延迟状态 */
+.latency-card {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: #F0F9EB;
+  border-radius: var(--radius-md);
+}
+
+.latency-card .latency-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.latency-card .latency-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.time-range-tabs {
+  display: flex;
+  gap: 4px;
+  margin-bottom: var(--spacing-md);
+}
+
+.time-range-tab {
+  padding: 4px 12px;
+  font-size: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-white);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+}
+
+.time-range-tab.active {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+
+@media (max-width: 768px) {
+  .monitor-layout {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>关怀走访任务清单 - EdgeFall 养老守护系统</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/village.css">
+  <link rel="stylesheet" href="../../css/pages/visit-tasks.css">
+</head>
+<body class="village-layout">
+
+  <header class="village-header">
+    <div class="header-left">
+      <div class="header-logo">&#9731;</div>
+      <span class="header-title">EdgeFall 养老守护系统</span>
+    </div>
+    <div class="header-right">
+      <span class="header-user"><strong>张网格员</strong> | 桂花村</span>
+      <a href="../admin/dashboard.html" class="btn btn-sm btn-switch">管理后台</a>
+      <a href="../login.html" class="btn btn-sm">退出</a>
+    </div>
+  </header>
+
+  <nav class="village-tabs">
+    <a class="tab-item" href="alert-board.html">紧急工单 <span class="tab-badge">3</span></a>
+    <a class="tab-item" href="elder-roster.html">老人名册</a>
+    <a class="tab-item active">走访任务</a>
+  </nav>
+
+  <main class="village-content">
+    <div class="page-title-row">
+      <h2>关怀走访任务清单</h2>
+    </div>
+
+    <!-- 状态筛选 -->
+    <div class="filter-tabs">
+      <button class="filter-tab active" onclick="filterTasks('all', this)">全部<span class="count">(5)</span></button>
+      <button class="filter-tab" onclick="filterTasks('pending', this)">待走访<span class="count">(3)</span></button>
+      <button class="filter-tab" onclick="filterTasks('done', this)">已完成<span class="count">(2)</span></button>
+    </div>
+
+    <!-- 任务卡片列表 -->
+    <div class="task-list">
+
+      <!-- 待走访 #1 -->
+      <div class="task-card" id="task-1">
+        <div class="task-header">
+          <span class="task-id">#TASK-001</span>
+          <span class="task-status tag tag-danger">待走访</span>
+        </div>
+        <div class="task-elder">&#128100; 张奶奶</div>
+        <div class="task-reason">
+          &#9888; 系统检测到老人连续3天门磁未触发（未出门），可能存在健康风险，建议上门查看。
+        </div>
+        <div class="task-footer">
+          <span class="task-date">2026-05-20 08:00</span>
+          <button class="btn btn-primary btn-sm" onclick="openFeedback('张奶奶', document.getElementById('task-1'))">填写反馈</button>
+        </div>
+      </div>
+
+      <!-- 待走访 #2 -->
+      <div class="task-card" id="task-2">
+        <div class="task-header">
+          <span class="task-id">#TASK-002</span>
+          <span class="task-status tag tag-danger">待走访</span>
+        </div>
+        <div class="task-elder">&#128100; 王大爷</div>
+        <div class="task-reason">
+          &#9888; 系统检测到老人近一周UWB轨迹极度单一（仅在卧室-卫生间往返），社交活跃度异常降低。
+        </div>
+        <div class="task-footer">
+          <span class="task-date">2026-05-19 10:30</span>
+          <button class="btn btn-primary btn-sm" onclick="openFeedback('王大爷', document.getElementById('task-2'))">填写反馈</button>
+        </div>
+      </div>
+
+      <!-- 待走访 #3 -->
+      <div class="task-card" id="task-3">
+        <div class="task-header">
+          <span class="task-id">#TASK-003</span>
+          <span class="task-status tag tag-danger">待走访</span>
+        </div>
+        <div class="task-elder">&#128100; 李奶奶</div>
+        <div class="task-reason">
+          &#9888; 系统检测到老人步态异常频率增高，本月AI评估显示跌倒风险上升，建议提前干预。
+        </div>
+        <div class="task-footer">
+          <span class="task-date">2026-05-18 14:15</span>
+          <button class="btn btn-primary btn-sm" onclick="openFeedback('李奶奶', document.getElementById('task-3'))">填写反馈</button>
+        </div>
+      </div>
+
+      <!-- 已完成 #4 -->
+      <div class="task-card completed" id="task-4">
+        <div class="task-header">
+          <span class="task-id">#TASK-004</span>
+          <span class="task-status tag tag-success">已完成</span>
+        </div>
+        <div class="task-elder">&#128100; 赵爷爷</div>
+        <div class="task-reason">
+          系统检测到老人连续5天未外出，已上门走访确认：老人因天气炎热居家纳凉，身体状态良好。
+        </div>
+        <div class="task-footer">
+          <span class="task-date">2026-05-15 09:00</span>
+          <button class="btn btn-sm" disabled>已反馈</button>
+        </div>
+      </div>
+
+      <!-- 已完成 #5 -->
+      <div class="task-card completed" id="task-5">
+        <div class="task-header">
+          <span class="task-id">#TASK-005</span>
+          <span class="task-status tag tag-success">已完成</span>
+        </div>
+        <div class="task-elder">&#128100; 钱奶奶</div>
+        <div class="task-reason">
+          系统检测到UWB轨迹异常波动，已上门走访确认：老人感冒卧床，已通知村医拿药，目前恢复良好。
+        </div>
+        <div class="task-footer">
+          <span class="task-date">2026-05-10 16:45</span>
+          <button class="btn btn-sm" disabled>已反馈</button>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <!-- 反馈弹窗 -->
+  <div class="modal-overlay" id="feedbackModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>走访反馈 - <span id="feedbackElderName"></span></h3>
+        <button class="modal-close" onclick="closeFeedback()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <label style="display:block;margin-bottom:8px;color:var(--color-text-secondary);">请描述走访情况：</label>
+        <textarea id="feedbackText" class="form-input feedback-textarea" placeholder="例如：老人感冒卧床，已通知村医拿药..."></textarea>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeFeedback()">取消</button>
+        <button class="btn btn-primary" onclick="submitFeedback()">提交反馈</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/visit-tasks.js"></script>
+</body>
+</html>

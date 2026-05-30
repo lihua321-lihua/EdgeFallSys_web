@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>运维仪表盘 - EdgeFall 管理后台</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/admin.css">
+  <link rel="stylesheet" href="../../css/pages/dashboard.css">
+</head>
+<body class="admin-layout">
+
+  <!-- ===== 侧边栏 ===== -->
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">&#9731;</div>
+      <span class="logo-text">EdgeFall 管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item active">
+        <span class="nav-icon">&#9632;</span> 仪表盘
+      </a>
+      <a class="nav-item" href="device-assets.html">
+        <span class="nav-icon">&#9881;</span> 设备管理
+      </a>
+      <a class="nav-item" href="organization.html">
+        <span class="nav-icon">&#9733;</span> 组织架构
+      </a>
+      <a class="nav-item" href="api-monitor.html">
+        <span class="nav-icon">&#9783;</span> API监控
+      </a>
+    </nav>
+  </aside>
+
+  <!-- ===== 右侧主区域 ===== -->
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-right">
+        <span class="header-user"><strong>管理员</strong> | 超级管理员</span>
+        <a href="../village/alert-board.html" class="btn btn-sm btn-switch">村委会端</a>
+        <a href="../login.html" class="btn btn-sm">退出</a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <!-- 设备概览 -->
+      <div class="dashboard-grid">
+        <div class="stat-card">
+          <span class="stat-label">设备总数</span>
+          <span class="stat-value primary">128</span>
+          <span class="stat-sub">台</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">在线设备</span>
+          <span class="stat-value success">115</span>
+          <span class="stat-sub">台</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">离线设备</span>
+          <span class="stat-value danger">8</span>
+          <span class="stat-sub">台</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">低电量</span>
+          <span class="stat-value warning">5</span>
+          <span class="stat-sub">台</span>
+        </div>
+      </div>
+
+      <!-- API 概览 -->
+      <div class="dashboard-row-2">
+        <div class="api-card">
+          <h3>萤石 API 今日调用</h3>
+          <div class="api-progress">
+            <div class="progress-fill" style="width:24.7%"></div>
+          </div>
+          <div class="api-detail">
+            <span>已用：1,234 次</span>
+            <span>总额度：5,000 次 (24.7%)</span>
+          </div>
+        </div>
+        <div class="api-card">
+          <h3>大模型 Token 消耗</h3>
+          <div class="api-progress">
+            <div class="progress-fill" style="width:45.6%; background:var(--color-warning)"></div>
+          </div>
+          <div class="api-detail">
+            <span>今日：45,678</span>
+            <span>本月：456,789 / 1,000,000 (45.6%)</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 最近告警 -->
+      <div class="recent-alerts">
+        <h3>最近跨村告警</h3>
+        <table class="data-table" style="box-shadow:none;border-radius:0;">
+          <thead>
+            <tr>
+              <th>时间</th>
+              <th>村庄</th>
+              <th>老人</th>
+              <th>告警类型</th>
+              <th>状态</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>14:32:15</td>
+              <td>桂花村</td>
+              <td>王大爷</td>
+              <td><span class="tag tag-danger">跌倒报警</span></td>
+              <td>待处理</td>
+            </tr>
+            <tr>
+              <td>13:58:02</td>
+              <td>桂花村</td>
+              <td>李奶奶</td>
+              <td><span class="tag tag-danger">跌倒报警</span></td>
+              <td>待处理</td>
+            </tr>
+            <tr>
+              <td>11:20:45</td>
+              <td>杨柳村</td>
+              <td>刘爷爷</td>
+              <td><span class="tag tag-warning">设备离线</span></td>
+              <td>已通知</td>
+            </tr>
+            <tr>
+              <td>09:15:30</td>
+              <td>石门村</td>
+              <td>陈奶奶</td>
+              <td><span class="tag tag-warning">低电量</span></td>
+              <td>已通知</td>
+            </tr>
+            <tr>
+              <td>08:05:10</td>
+              <td>桃花村</td>
+              <td>周大爷</td>
+              <td><span class="tag tag-danger">跌倒报警</span></td>
+              <td>已处理</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

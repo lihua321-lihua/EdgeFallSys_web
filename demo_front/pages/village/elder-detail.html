@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>老人详情 - EdgeFall 养老守护系统</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/village.css">
+  <link rel="stylesheet" href="../../css/pages/elder-detail.css">
+</head>
+<body class="village-layout">
+
+  <header class="village-header">
+    <div class="header-left">
+      <div class="header-logo">&#9731;</div>
+      <span class="header-title">EdgeFall 养老守护系统</span>
+    </div>
+    <div class="header-right">
+      <span class="header-user"><strong>张网格员</strong> | 桂花村</span>
+      <a href="../admin/dashboard.html" class="btn btn-sm btn-switch">管理后台</a>
+      <a href="../login.html" class="btn btn-sm">退出</a>
+    </div>
+  </header>
+
+  <nav class="village-tabs">
+    <a class="tab-item" href="alert-board.html">紧急工单 <span class="tab-badge">3</span></a>
+    <a class="tab-item active" href="elder-roster.html">老人名册</a>
+    <a class="tab-item" href="visit-tasks.html">走访任务</a>
+  </nav>
+
+  <main class="village-content">
+    <!-- 面包屑 -->
+    <div class="breadcrumb">
+      <a href="elder-roster.html">老人名册</a>
+      <span class="separator">&gt;</span>
+      <span class="current">张奶奶</span>
+    </div>
+
+    <div class="detail-layout">
+      <!-- 左侧：基础信息卡片 -->
+      <div class="detail-card">
+        <div class="card-head">&#128100; 基础信息</div>
+        <div class="card-body">
+          <div class="info-grid">
+            <div class="info-item">
+              <span class="info-label">姓名</span>
+              <span class="info-value">张奶奶</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">年龄</span>
+              <span class="info-value">78 岁</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">性别</span>
+              <span class="info-value">女</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">住址</span>
+              <span class="info-value">桂花村1组</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">手环编号</span>
+              <span class="info-value">WB-001</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">网关编号</span>
+              <span class="info-value">GW-A01</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">家属电话</span>
+              <span class="info-value">138****1234</span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">紧急联系人</span>
+              <span class="info-value">张先生（儿子）</span>
+            </div>
+            <div class="info-item full-width">
+              <span class="info-label">既往病史</span>
+              <span class="info-value">高血压、轻度关节炎、偶发心悸</span>
+            </div>
+            <div class="info-item full-width">
+              <span class="info-label">绑定时长</span>
+              <span class="info-value">2026年1月15日至今（130天）</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧：健康评估面板 -->
+      <div>
+        <!-- AI 月度评估 -->
+        <div class="health-report">
+          <div class="report-title">&#129504; AI 月度健康评估</div>
+          <p class="report-text">经系统分析，本月张奶奶情绪低落指数较高，步态平稳度下降，存在一定的孤寡抑郁及跌倒风险。建议本月增加上门走访频次，关注老人心理状态，必要时安排村医上门做进一步检查。</p>
+          <div class="report-meta">
+            <span>&#128197;</span> 评估时间：2026年5月 &nbsp;|&nbsp; 数据来源：手环UWB轨迹 + 语音情绪分析
+          </div>
+        </div>
+
+        <!-- 近期活动记录 -->
+        <div class="detail-card" style="margin-top: var(--spacing-lg);">
+          <div class="card-head">&#128337; 近期门磁活动记录</div>
+          <div class="card-body">
+            <div class="history-item">
+              <span class="history-date">05月24日</span>
+              <span>08:15 开门外出</span>
+              <span>09:30 返回家中</span>
+              <span class="history-tag tag-success">正常</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">05月23日</span>
+              <span>未检测到开门</span>
+              <span class="history-tag tag-warning">异常</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">05月22日</span>
+              <span>未检测到开门</span>
+              <span class="history-tag tag-warning">异常</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">05月21日</span>
+              <span>未检测到开门</span>
+              <span class="history-tag tag-danger">连续3天</span>
+            </div>
+            <div class="history-item">
+              <span class="history-date">05月20日</span>
+              <span>10:00 开门外出</span>
+              <span>11:20 返回家中</span>
+              <span class="history-tag tag-success">正常</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- 返回按钮 -->
+        <div style="margin-top: var(--spacing-lg);">
+          <a href="elder-roster.html" class="btn">&larr; 返回老人名册</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</body>
+</html>

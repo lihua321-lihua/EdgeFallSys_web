@@ -1,0 +1,68 @@
+/* ========================================
+   设备资产管理
+   ======================================== */
+
+.device-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: var(--spacing-lg);
+  border-bottom: 2px solid var(--color-border-light);
+}
+
+.device-tabs .device-tab {
+  padding: 10px 24px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border: none;
+  background: none;
+  position: relative;
+  transition: color 0.2s;
+}
+
+.device-tabs .device-tab:hover { color: var(--color-primary); }
+
+.device-tabs .device-tab.active {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.device-tabs .device-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0; right: 0;
+  height: 2px;
+  background: var(--color-primary);
+}
+
+.device-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--spacing-md);
+  gap: var(--spacing-sm);
+}
+
+.device-toolbar .toolbar-left {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+
+/* 换绑弹窗 */
+.bind-form .form-group {
+  margin-bottom: var(--spacing-md);
+}
+
+.bind-form label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 768px) {
+  .device-toolbar {
+    flex-direction: column;
+  }
+}

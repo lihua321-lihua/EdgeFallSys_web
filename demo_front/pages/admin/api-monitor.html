@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>API 监控台 - EdgeFall 管理后台</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/admin.css">
+  <link rel="stylesheet" href="../../css/pages/api-monitor.css">
+</head>
+<body class="admin-layout">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">&#9731;</div>
+      <span class="logo-text">EdgeFall 管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <span class="nav-icon">&#9632;</span> 仪表盘
+      </a>
+      <a class="nav-item" href="device-assets.html">
+        <span class="nav-icon">&#9881;</span> 设备管理
+      </a>
+      <a class="nav-item" href="organization.html">
+        <span class="nav-icon">&#9733;</span> 组织架构
+      </a>
+      <a class="nav-item active">
+        <span class="nav-icon">&#9783;</span> API监控
+      </a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-right">
+        <span class="header-user"><strong>管理员</strong> | 超级管理员</span>
+        <a href="../village/alert-board.html" class="btn btn-sm btn-switch">村委会端</a>
+        <a href="../login.html" class="btn btn-sm">退出</a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="monitor-layout">
+        <!-- 左侧：萤石开放平台 -->
+        <div class="monitor-panel">
+          <div class="panel-header">&#128247; 萤石开放平台用量</div>
+          <div class="panel-body">
+            <div class="ring-progress">
+              <div class="ring-wrap">
+                <svg width="160" height="160" viewBox="0 0 160 160" class="ring-svg">
+                  <circle class="ring-bg" cx="80" cy="80" r="70"/>
+                  <circle class="ring-fill" cx="80" cy="80" r="70"
+                    stroke-dasharray="439.8"
+                    stroke-dashoffset="331"
+                    style="stroke:#67C23A;"/>
+                </svg>
+                <div class="ring-center-text">
+                  <div class="big-num">1,234</div>
+                  <div class="pct-label">/ 5,000 次</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="usage-stats">
+              <div class="usage-stat">
+                <div class="stat-num" style="color:var(--color-success);">3,766</div>
+                <div class="stat-label">剩余额度</div>
+              </div>
+              <div class="usage-stat">
+                <div class="stat-num">24.7%</div>
+                <div class="stat-label">使用率</div>
+              </div>
+            </div>
+
+            <p style="font-size:12px;color:var(--color-text-light);text-align:center;margin-top:var(--spacing-sm);">
+              额度使用率正常，距免费额度上限仍有较大余量
+            </p>
+          </div>
+        </div>
+
+        <!-- 右侧：大模型服务 -->
+        <div class="monitor-panel">
+          <div class="panel-header">&#129504; 大模型服务监控</div>
+          <div class="panel-body">
+            <!-- 时间范围切换 -->
+            <div class="time-range-tabs">
+              <button class="time-range-tab active" onclick="switchTimeRange('day', this)">今日</button>
+              <button class="time-range-tab" onclick="switchTimeRange('week', this)">本周</button>
+              <button class="time-range-tab" onclick="switchTimeRange('month', this)">本月</button>
+            </div>
+
+            <!-- Token 消耗 -->
+            <table class="token-table">
+              <thead>
+                <tr>
+                  <th>指标</th>
+                  <th>数值</th>
+                  <th>状态</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>Token 消耗</td>
+                  <td><strong>45,678</strong></td>
+                  <td><span class="tag tag-info">正常</span></td>
+                </tr>
+                <tr>
+                  <td>API 调用次数</td>
+                  <td><strong>156</strong></td>
+                  <td><span class="tag tag-info">正常</span></td>
+                </tr>
+                <tr>
+                  <td>月累计消耗</td>
+                  <td><strong>456,789</strong></td>
+                  <td><span class="tag tag-info">正常</span></td>
+                </tr>
+                <tr>
+                  <td>月额度上限</td>
+                  <td><strong>1,000,000</strong></td>
+                  <td>-</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <!-- 响应延迟 -->
+            <div class="latency-card">
+              <div>
+                <div class="latency-value">235<span style="font-size:16px">ms</span></div>
+                <div class="latency-label">接口响应延迟</div>
+              </div>
+              <span class="tag tag-success">健康</span>
+            </div>
+
+            <p style="font-size:12px;color:var(--color-text-light);margin-top:var(--spacing-sm);text-align:center;">
+              Qwen 大模型服务运行正常，近1小时无异常波动
+            </p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script src="../../js/api-monitor.js"></script>
+</body>
+</html>

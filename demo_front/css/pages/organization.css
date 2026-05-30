@@ -1,0 +1,116 @@
+/* ========================================
+   组织架构与账号管理 - 双栏布局
+   ======================================== */
+
+.org-layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+/* 组织树 */
+.org-tree {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.org-tree .tree-title {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.org-tree .tree-body {
+  padding: var(--spacing-sm) 0;
+}
+
+.tree-node {
+  position: relative;
+}
+
+.tree-node .node-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: 10px var(--spacing-lg) 10px 20px;
+  cursor: pointer;
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  transition: background 0.15s;
+}
+
+.tree-node .node-label:hover {
+  background: #F5F7FA;
+}
+
+.tree-node .node-label .expand-icon {
+  width: 16px;
+  text-align: center;
+  font-size: 12px;
+  color: var(--color-text-secondary);
+  transition: transform 0.2s;
+}
+
+.tree-node.expanded .node-label .expand-icon {
+  transform: rotate(90deg);
+}
+
+.tree-node .node-children {
+  display: none;
+}
+
+.tree-node.expanded .node-children {
+  display: block;
+}
+
+.tree-node .node-children .node-label {
+  padding-left: 48px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.tree-node .node-children .node-label:hover {
+  color: var(--color-primary);
+}
+
+.tree-node .node-children .node-label.active {
+  color: var(--color-primary);
+  font-weight: 500;
+  background: #ECF5FF;
+}
+
+/* 账号管理 */
+.org-accounts {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.org-accounts .accounts-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+.org-accounts .accounts-header h3 {
+  font-size: var(--font-size-village);
+  font-weight: 600;
+}
+
+.accounts-table .data-table {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+@media (max-width: 768px) {
+  .org-layout {
+    grid-template-columns: 1fr;
+  }
+}
