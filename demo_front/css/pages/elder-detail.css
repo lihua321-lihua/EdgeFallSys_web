@@ -1,0 +1,123 @@
+/* ========================================
+   老人详情页 - 双栏布局
+   ======================================== */
+
+.detail-layout {
+  display: grid;
+  grid-template-columns: 360px 1fr;
+  gap: var(--spacing-lg);
+  align-items: start;
+}
+
+.detail-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.detail-card .card-head {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.detail-card .card-body {
+  padding: var(--spacing-lg);
+}
+
+/* 基础信息 */
+.info-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-md);
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.info-item .info-label {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+.info-item .info-value {
+  font-size: var(--font-size-village);
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.info-item.full-width {
+  grid-column: 1 / -1;
+}
+
+/* AI 健康评估 */
+.health-report {
+  padding: var(--spacing-lg);
+  background: linear-gradient(135deg, #F0F7FF 0%, #F5F7FA 100%);
+  border-radius: var(--radius-md);
+  border: 1px solid #D6E8FF;
+  margin-bottom: var(--spacing-md);
+}
+
+.health-report .report-title {
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  color: var(--color-primary-dark);
+  margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.health-report .report-text {
+  font-size: var(--font-size-village);
+  color: var(--color-text);
+  line-height: 1.8;
+}
+
+.health-report .report-meta {
+  margin-top: var(--spacing-md);
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+/* 历史档案 */
+.history-item {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--font-size-base);
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item .history-date {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  min-width: 90px;
+}
+
+.history-item .history-tag {
+  font-size: 12px;
+}
+
+@media (max-width: 768px) {
+  .detail-layout {
+    grid-template-columns: 1fr;
+  }
+}

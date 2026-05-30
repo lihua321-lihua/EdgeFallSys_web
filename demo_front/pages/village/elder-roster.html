@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>辖区老人名册 - EdgeFall 养老守护系统</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/village.css">
+  <link rel="stylesheet" href="../../css/pages/elder-roster.css">
+</head>
+<body class="village-layout">
+
+  <header class="village-header">
+    <div class="header-left">
+      <div class="header-logo">&#9731;</div>
+      <span class="header-title">EdgeFall 养老守护系统</span>
+    </div>
+    <div class="header-right">
+      <span class="header-user"><strong>张网格员</strong> | 桂花村</span>
+      <a href="../admin/dashboard.html" class="btn btn-sm btn-switch">管理后台</a>
+      <a href="../login.html" class="btn btn-sm">退出</a>
+    </div>
+  </header>
+
+  <nav class="village-tabs">
+    <a class="tab-item" href="alert-board.html">紧急工单 <span class="tab-badge">3</span></a>
+    <a class="tab-item active">老人名册</a>
+    <a class="tab-item" href="visit-tasks.html">走访任务</a>
+  </nav>
+
+  <main class="village-content">
+    <div class="page-title-row">
+      <h2>辖区老人名册</h2>
+    </div>
+
+    <div class="search-bar">
+      <input type="text" class="form-input" placeholder="按姓名或住址搜索..." id="searchInput">
+      <button class="btn btn-primary" onclick="handleSearch()">搜索</button>
+    </div>
+
+    <div class="roster-table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>姓名</th>
+            <th>年龄</th>
+            <th>性别</th>
+            <th>住址</th>
+            <th>手环编号</th>
+            <th>网关编号</th>
+            <th>家属电话</th>
+            <th>本月AI健康评估</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr onclick="location.href='elder-detail.html'">
+            <td><strong>张奶奶</strong></td>
+            <td>78</td>
+            <td>女</td>
+            <td>桂花村1组</td>
+            <td>WB-001</td>
+            <td>GW-A01</td>
+            <td>138****1234</td>
+            <td><span class="health-tag attention">情绪低落指数较高，存在抑郁及跌倒风险</span></td>
+          </tr>
+          <tr onclick="location.href='elder-detail.html'">
+            <td><strong>王大爷</strong></td>
+            <td>82</td>
+            <td>男</td>
+            <td>桂花村3组</td>
+            <td>WB-002</td>
+            <td>GW-A01</td>
+            <td>139****5678</td>
+            <td><span class="health-tag normal">步态平稳度正常，整体状态良好</span></td>
+          </tr>
+          <tr onclick="location.href='elder-detail.html'">
+            <td><strong>李奶奶</strong></td>
+            <td>75</td>
+            <td>女</td>
+            <td>桂花村2组</td>
+            <td>WB-003</td>
+            <td>GW-A02</td>
+            <td>136****9012</td>
+            <td><span class="health-tag warning">睡眠质量下降，偶有步态不稳</span></td>
+          </tr>
+          <tr onclick="location.href='elder-detail.html'">
+            <td><strong>赵爷爷</strong></td>
+            <td>80</td>
+            <td>男</td>
+            <td>桂花村4组</td>
+            <td>WB-005</td>
+            <td>GW-A02</td>
+            <td>137****3456</td>
+            <td><span class="health-tag normal">各项指标正常，精神状态良好</span></td>
+          </tr>
+          <tr onclick="location.href='elder-detail.html'">
+            <td><strong>钱奶奶</strong></td>
+            <td>71</td>
+            <td>女</td>
+            <td>桂花村1组</td>
+            <td>WB-006</td>
+            <td>GW-A01</td>
+            <td>135****7890</td>
+            <td><span class="health-tag warning">活动量明显减少，建议增加走访</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <button disabled>&laquo;</button>
+      <button class="active">1</button>
+      <button>2</button>
+      <button>&raquo;</button>
+    </div>
+  </main>
+
+  <script>
+    function handleSearch() {
+      const val = document.getElementById('searchInput').value;
+      if (val) alert('静态演示：搜索功能在完整版中生效\n搜索关键词：' + val);
+    }
+  </script>
+</body>
+</html>

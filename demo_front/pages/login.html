@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>登录 - EdgeFall 养老守护系统</title>
+  <link rel="stylesheet" href="../css/common.css">
+  <link rel="stylesheet" href="../css/pages/login.css">
+</head>
+<body class="login-page">
+
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon">&#9731;</div>
+      <h1>EdgeFall 养老守护系统</h1>
+      <p class="subtitle">乡村智慧养老监护平台</p>
+    </div>
+
+    <form class="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label for="username">用户名</label>
+        <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+      </div>
+      <div class="form-group">
+        <label for="password">密码</label>
+        <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+      </div>
+      <div class="login-extra">
+        <label><input type="checkbox" checked> 记住登录</label>
+        <a href="#">忘记密码？</a>
+      </div>
+      <div class="role-select">
+        <label class="role-option active" data-role="village">
+          <input type="radio" name="role" value="village" checked>
+          <span class="role-label">村委会端</span>
+          <span class="role-desc">网格员/村医日常工单</span>
+        </label>
+        <label class="role-option" data-role="admin">
+          <input type="radio" name="role" value="admin">
+          <span class="role-label">管理后台</span>
+          <span class="role-desc">设备/组织/API运维</span>
+        </label>
+      </div>
+      <button type="submit" class="btn btn-primary">登 录</button>
+    </form>
+  </div>
+
+  <div class="login-footer">EdgeFall 养老守护系统 v1.0.0</div>
+
+  <script>
+    function handleLogin(e) {
+      e.preventDefault();
+      var role = document.querySelector('input[name="role"]:checked').value;
+      if (role === 'admin') {
+        window.location.href = 'admin/dashboard.html';
+      } else {
+        window.location.href = 'village/alert-board.html';
+      }
+    }
+
+    document.querySelectorAll('.role-option').forEach(function(opt) {
+      opt.addEventListener('click', function() {
+        document.querySelectorAll('.role-option').forEach(function(o) { o.classList.remove('active'); });
+        this.classList.add('active');
+      });
+    });
+  </script>
+</body>
+</html>

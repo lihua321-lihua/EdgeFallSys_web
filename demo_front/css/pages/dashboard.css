@@ -1,0 +1,115 @@
+/* ========================================
+   运维仪表盘 - 卡片网格布局
+   ======================================== */
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--spacing-md);
+  margin-bottom: var(--spacing-lg);
+}
+
+.stat-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.stat-card .stat-label {
+  font-size: 14px;
+  color: var(--color-text-secondary);
+}
+
+.stat-card .stat-value {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.stat-card .stat-value.danger { color: var(--color-danger); }
+.stat-card .stat-value.success { color: var(--color-success); }
+.stat-card .stat-value.warning { color: var(--color-warning); }
+.stat-card .stat-value.primary { color: var(--color-primary); }
+
+.stat-card .stat-sub {
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* 双列卡片 */
+.dashboard-row-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+}
+
+/* API 概览卡片 */
+.api-card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-lg);
+}
+
+.api-card h3 {
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  margin-bottom: var(--spacing-md);
+}
+
+.api-progress {
+  height: 8px;
+  background: #E4E7ED;
+  border-radius: 4px;
+  overflow: hidden;
+  margin-bottom: var(--spacing-sm);
+}
+
+.api-progress .progress-fill {
+  height: 100%;
+  background: var(--color-primary);
+  border-radius: 4px;
+  transition: width 0.3s;
+}
+
+.api-detail {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+}
+
+/* 最近告警表格 */
+.recent-alerts {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.recent-alerts h3 {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-village);
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border-light);
+}
+
+@media (max-width: 1024px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+  .dashboard-row-2 {
+    grid-template-columns: 1fr;
+  }
+}

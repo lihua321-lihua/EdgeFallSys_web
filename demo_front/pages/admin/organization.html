@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>组织架构与账号管理 - EdgeFall 管理后台</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/admin.css">
+  <link rel="stylesheet" href="../../css/pages/organization.css">
+</head>
+<body class="admin-layout">
+
+  <aside class="admin-sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">&#9731;</div>
+      <span class="logo-text">EdgeFall 管理</span>
+    </div>
+    <nav class="sidebar-nav">
+      <a class="nav-item" href="dashboard.html">
+        <span class="nav-icon">&#9632;</span> 仪表盘
+      </a>
+      <a class="nav-item" href="device-assets.html">
+        <span class="nav-icon">&#9881;</span> 设备管理
+      </a>
+      <a class="nav-item active">
+        <span class="nav-icon">&#9733;</span> 组织架构
+      </a>
+      <a class="nav-item" href="api-monitor.html">
+        <span class="nav-icon">&#9783;</span> API监控
+      </a>
+    </nav>
+  </aside>
+
+  <div class="admin-main">
+    <header class="admin-header">
+      <div class="header-right">
+        <span class="header-user"><strong>管理员</strong> | 超级管理员</span>
+        <a href="../village/alert-board.html" class="btn btn-sm btn-switch">村委会端</a>
+        <a href="../login.html" class="btn btn-sm">退出</a>
+      </div>
+    </header>
+
+    <main class="admin-content">
+      <div class="org-layout">
+        <!-- 左侧组织树 -->
+        <div class="org-tree">
+          <div class="tree-title">&#9733; 组织架构</div>
+          <div class="tree-body">
+            <div class="tree-node expanded" id="tree-guiHua">
+              <div class="node-label" onclick="toggleTree(this.parentElement)">
+                <span class="expand-icon">&#9654;</span> 桂花镇
+              </div>
+              <div class="node-children">
+                <div class="node-label active" onclick="selectVillage('桂花村', this)">桂花村</div>
+                <div class="node-label" onclick="selectVillage('杨柳村', this)">杨柳村</div>
+                <div class="node-label" onclick="selectVillage('石门村', this)">石门村</div>
+                <div class="node-label" onclick="selectVillage('桃花村', this)">桃花村</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 右侧账号管理 -->
+        <div class="org-accounts">
+          <div class="accounts-header">
+            <h3>账号管理 - 桂花村</h3>
+            <button class="btn btn-primary btn-sm">+ 新增账号</button>
+          </div>
+          <div class="accounts-table">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>用户名</th>
+                  <th>所属村</th>
+                  <th>角色</th>
+                  <th>最后登录</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>zhang_grid</strong></td>
+                  <td>桂花村</td>
+                  <td><span class="tag tag-info">村级网格员</span></td>
+                  <td>2026-05-25 14:30</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="openRoleConfig('zhang_grid')">编辑</button>
+                    <button class="btn btn-sm btn-danger">禁用</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>wang_grid</strong></td>
+                  <td>桂花村</td>
+                  <td><span class="tag tag-info">村级网格员</span></td>
+                  <td>2026-05-25 09:15</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="openRoleConfig('wang_grid')">编辑</button>
+                    <button class="btn btn-sm btn-danger">禁用</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>li_doctor</strong></td>
+                  <td>桂花村</td>
+                  <td><span class="tag tag-success">村医</span></td>
+                  <td>2026-05-24 16:45</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="openRoleConfig('li_doctor')">编辑</button>
+                    <button class="btn btn-sm btn-danger">禁用</button>
+                  </td>
+                </tr>
+                <tr>
+                  <td><strong>admin_wang</strong></td>
+                  <td>—</td>
+                  <td><span class="tag tag-warning">超级管理员</span></td>
+                  <td>2026-05-25 15:00</td>
+                  <td>
+                    <button class="btn btn-sm" onclick="openRoleConfig('admin_wang')">编辑</button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- 角色配置弹窗 -->
+  <div class="modal-overlay" id="roleModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>角色配置 - <span id="roleUsername"></span></h3>
+        <button class="modal-close" onclick="closeRoleModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom:var(--spacing-md);color:var(--color-text-secondary);">请选择角色：</p>
+        <div class="process-options">
+          <label><input type="radio" name="userRole" value="村级网格员"><span>村级网格员</span></label>
+          <label><input type="radio" name="userRole" value="村医"><span>村医</span></label>
+          <label><input type="radio" name="userRole" value="超级管理员"><span>超级管理员</span></label>
+        </div>
+        <p style="font-size:12px;color:var(--color-text-light);background:#F5F7FA;padding:8px;border-radius:var(--radius-sm);">
+          村级网格员：查看本村工单+走访任务 | 村医：仅查看健康档案 | 超级管理员：全盘数据
+        </p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeRoleModal()">取消</button>
+        <button class="btn btn-primary" onclick="saveRole()">保存</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/organization.js"></script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>紧急工单台 - EdgeFall 养老守护系统</title>
+  <link rel="stylesheet" href="../../css/common.css">
+  <link rel="stylesheet" href="../../css/pages/village.css">
+  <link rel="stylesheet" href="../../css/pages/alert-board.css">
+</head>
+<body class="village-layout">
+
+  <!-- ===== 顶栏 ===== -->
+  <header class="village-header">
+    <div class="header-left">
+      <div class="header-logo">&#9731;</div>
+      <span class="header-title">EdgeFall 养老守护系统</span>
+    </div>
+    <div class="header-right">
+      <span id="currentTime" class="header-user"></span>
+      <span class="header-user"><strong>张网格员</strong> | 桂花村</span>
+      <a href="../admin/dashboard.html" class="btn btn-sm btn-switch">管理后台</a>
+      <a href="../login.html" class="btn btn-sm">退出</a>
+    </div>
+  </header>
+
+  <!-- ===== Tab 导航 ===== -->
+  <nav class="village-tabs">
+    <a class="tab-item active">紧急工单 <span class="tab-badge">3</span></a>
+    <a class="tab-item" href="elder-roster.html">老人名册</a>
+    <a class="tab-item" href="visit-tasks.html">走访任务</a>
+  </nav>
+
+  <!-- ===== 内容区 ===== -->
+  <main class="village-content">
+    <div class="page-title-row">
+      <h2>紧急工单台</h2>
+    </div>
+
+    <!-- 工单汇总 -->
+    <div class="alert-summary">
+      <span class="summary-item summary-danger">跌倒报警：2 条</span>
+      <span class="summary-item summary-warning">高危预警：1 条</span>
+    </div>
+
+    <!-- 告警列表 -->
+    <div class="alert-list" id="alertList">
+
+      <!-- 红色告警 - 跌倒 -->
+      <div class="alert-card card-danger" id="alert-1">
+        <div class="alert-badge">
+          <span class="badge-icon">&#9888;</span>
+        </div>
+        <div class="alert-info">
+          <div class="info-row">
+            <span class="elder-name">王大爷</span>
+            <span class="alert-type">跌倒报警</span>
+          </div>
+          <div class="info-sub">
+            <span>发生位置：<span class="location">卫生间</span></span>
+            <span>手环编号：WB-002</span>
+          </div>
+        </div>
+        <div class="alert-time">14:32:15</div>
+        <div class="alert-action">
+          <button class="btn btn-danger btn-lg" onclick="openProcessDialog('王大爷', 'alert-1')">接单处理</button>
+        </div>
+      </div>
+
+      <div class="alert-card card-danger" id="alert-2">
+        <div class="alert-badge">
+          <span class="badge-icon">&#9888;</span>
+        </div>
+        <div class="alert-info">
+          <div class="info-row">
+            <span class="elder-name">李奶奶</span>
+            <span class="alert-type">跌倒报警</span>
+          </div>
+          <div class="info-sub">
+            <span>发生位置：<span class="location">厨房</span></span>
+            <span>手环编号：WB-003</span>
+          </div>
+        </div>
+        <div class="alert-time">13:58:02</div>
+        <div class="alert-action">
+          <button class="btn btn-danger btn-lg" onclick="openProcessDialog('李奶奶', 'alert-2')">接单处理</button>
+        </div>
+      </div>
+
+      <!-- 橙色告警 - 诈骗预警 -->
+      <div class="alert-card card-warning" id="alert-3">
+        <div class="alert-badge">
+          <span class="badge-icon">&#9889;</span>
+        </div>
+        <div class="alert-info">
+          <div class="info-row">
+            <span class="elder-name">赵爷爷</span>
+            <span class="alert-type">诈骗预警</span>
+          </div>
+          <div class="info-sub">
+            <span>陌生号码来电</span>
+            <span>手环编号：WB-005</span>
+          </div>
+        </div>
+        <div class="alert-time">12:20:33</div>
+        <div class="alert-action">
+          <button class="btn btn-warning btn-lg" style="background:var(--color-warning);border-color:var(--color-warning);color:#fff;" onclick="openProcessDialog('赵爷爷', 'alert-3')">接单处理</button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 空状态（初始隐藏） -->
+    <div class="empty-state" id="emptyState" style="display:none;">
+      <div class="empty-icon">&#9749;</div>
+      <p>暂无待处理工单</p>
+    </div>
+  </main>
+
+  <!-- ===== 接单处理弹窗 ===== -->
+  <div class="modal-overlay" id="processModal">
+    <div class="modal-box">
+      <div class="modal-header">
+        <h3>工单处理 - <span id="processElderName"></span></h3>
+        <button class="modal-close" onclick="closeProcessDialog()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <p style="margin-bottom: var(--spacing-md); color: var(--color-text-secondary);">请选择处理方式：</p>
+        <div class="process-options" id="processOptions">
+          <label><input type="radio" name="processType" value="visited"><span>已上门</span></label>
+          <label><input type="radio" name="processType" value="contacted"><span>已联系家属</span></label>
+          <label><input type="radio" name="processType" value="false_alarm"><span>误报</span></label>
+        </div>
+        <div class="process-note">
+          <label for="processNote">备注（可选）</label>
+          <textarea id="processNote" class="form-input" placeholder="请输入处理备注..."></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn" onclick="closeProcessDialog()">取消</button>
+        <button class="btn btn-primary" onclick="submitProcess()">确认提交</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="../../js/alert-board.js"></script>
+</body>
+</html>

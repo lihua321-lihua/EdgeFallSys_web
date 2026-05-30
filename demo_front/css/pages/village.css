@@ -1,0 +1,160 @@
+/* ========================================
+   村委会端 - 通用布局样式
+   顶栏 + Tab导航 + 全宽内容区
+   ======================================== */
+
+.village-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--color-bg);
+}
+
+/* 顶栏 */
+.village-header {
+  height: var(--header-height);
+  background: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 var(--spacing-lg);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.04);
+}
+
+.village-header .header-left {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.village-header .header-logo {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-primary-dark) 100%);
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.village-header .header-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.village-header .header-right {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+}
+
+.village-header .header-user {
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+}
+
+.village-header .header-user strong {
+  color: var(--color-text);
+  margin-right: 4px;
+}
+
+/* Tab 导航 */
+.village-tabs {
+  background: var(--color-bg-white);
+  border-bottom: 1px solid var(--color-border-light);
+  display: flex;
+  padding: 0 var(--spacing-lg);
+  gap: 0;
+}
+
+.village-tabs .tab-item {
+  padding: 14px var(--spacing-lg);
+  font-size: var(--font-size-village);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-decoration: none;
+  position: relative;
+}
+
+.village-tabs .tab-item:hover {
+  color: var(--color-primary);
+}
+
+.village-tabs .tab-item.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+
+.village-tabs .tab-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  background: var(--color-danger);
+  color: #fff;
+  line-height: 1;
+}
+
+/* 内容区 */
+.village-content {
+  flex: 1;
+  padding: var(--spacing-lg);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 页面标题行 */
+.page-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--spacing-lg);
+}
+
+.page-title-row h2 {
+  font-size: var(--font-size-title);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* 响应式 */
+@media (max-width: 768px) {
+  .village-header {
+    padding: 0 var(--spacing-md);
+  }
+  .village-header .header-title {
+    font-size: var(--font-size-village);
+  }
+  .village-tabs {
+    padding: 0 var(--spacing-md);
+    overflow-x: auto;
+  }
+  .village-tabs .tab-item {
+    padding: 12px var(--spacing-md);
+    font-size: 14px;
+    white-space: nowrap;
+  }
+  .village-content {
+    padding: var(--spacing-md);
+  }
+}

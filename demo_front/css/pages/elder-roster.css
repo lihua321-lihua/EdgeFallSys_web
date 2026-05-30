@@ -1,0 +1,53 @@
+/* ========================================
+   辖区老人名册 - 表格样式
+   ======================================== */
+
+.roster-table-wrap {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.roster-table-wrap .data-table {
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.roster-table-wrap .data-table td:last-child {
+  max-width: 300px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--color-text-secondary);
+}
+
+.roster-table-wrap .data-table tr {
+  cursor: pointer;
+}
+
+.roster-table-wrap .data-table tr:hover {
+  background: #ECF5FF;
+}
+
+.roster-table-wrap .health-tag {
+  display: inline-block;
+  padding: 2px 10px;
+  border-radius: 10px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.roster-table-wrap .health-tag.warning {
+  background: var(--color-warning-bg);
+  color: var(--color-warning);
+}
+
+.roster-table-wrap .health-tag.normal {
+  background: var(--color-success-bg);
+  color: var(--color-success);
+}
+
+.roster-table-wrap .health-tag.attention {
+  background: var(--color-danger-bg);
+  color: var(--color-danger);
+}
