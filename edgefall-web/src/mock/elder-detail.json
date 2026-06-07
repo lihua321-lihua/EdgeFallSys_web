@@ -1,0 +1,26 @@
+{
+  "elder_id": "ELD_101",
+  "name": "张奶奶",
+  "age": 78,
+  "gender": "女",
+  "address": "桂花村1组",
+  "device_sn": "WB-001",
+  "gateway_sn": "GW-A01",
+  "emergency_contact": "138****1234",
+  "emergency_relation": "张先生（儿子）",
+  "medical_history": "高血压、轻度关节炎、偶发心悸",
+  "bind_duration": "2026年1月15日至今（130天）",
+  "recent_activities": [
+    { "date": "05月24日", "open": "08:15", "close": "09:30", "status": "normal" },
+    { "date": "05月23日", "open": null, "close": null, "status": "warning" },
+    { "date": "05月22日", "open": null, "close": null, "status": "warning" },
+    { "date": "05月21日", "open": null, "close": null, "status": "danger" },
+    { "date": "05月20日", "open": "10:00", "close": "11:20", "status": "normal" }
+  ],
+  "ai_report": {
+    "report_date": "2026-05",
+    "risk_tags": ["跌倒中风险", "情绪低落"],
+    "ai_summary": "经系统分析，本月张奶奶情绪低落指数较高，步态平稳度下降，存在一定的孤寡抑郁及跌倒风险。建议本月增加上门走访频次，关注老人心理状态，必要时安排村医上门做进一步检查。",
+    "data_source": "手环UWB轨迹 + 语音情绪分析"
+  }
+}

@@ -1,0 +1,44 @@
+[
+  {
+    "event_id": "EVT_2026_001",
+    "elder_name": "王大爷",
+    "elder_id": "ELD_102",
+    "type": "FALL_DETECTED",
+    "level": "CRITICAL",
+    "create_time": 1716300000,
+    "status": "pending",
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "卫生间",
+      "ai_diagnosis": "左侧着地，未检测到起身"
+    }
+  },
+  {
+    "event_id": "EVT_2026_002",
+    "elder_name": "李奶奶",
+    "elder_id": "ELD_103",
+    "type": "FALL_DETECTED",
+    "level": "CRITICAL",
+    "create_time": 1716298800,
+    "status": "pending",
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "厨房",
+      "ai_diagnosis": "检测到碰撞，请立即查看"
+    }
+  },
+  {
+    "event_id": "EVT_2026_003",
+    "elder_name": "赵爷爷",
+    "elder_id": "ELD_105",
+    "type": "SCAM_ALERT",
+    "level": "HIGH",
+    "create_time": 1716294000,
+    "status": "pending",
+    "payload": {
+      "title": "诈骗电话预警",
+      "location": "客厅",
+      "ai_diagnosis": "陌生号码长时间通话，心率异常升高"
+    }
+  }
+]

@@ -1,0 +1,185 @@
+/* ========================================
+   EdgeFallSys - 全局基础样式
+   Reset + 通用组件样式（与 Element Plus 互补）
+   ======================================== */
+
+/* --- Reset --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  width: 100%;
+  min-height: 100vh;
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+a:hover {
+  color: var(--color-primary-light);
+}
+
+ul, ol {
+  list-style: none;
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+input, textarea, select, button {
+  font-family: inherit;
+  font-size: inherit;
+}
+
+/* --- 通用输入框（与 Element Plus 互补） --- */
+.form-input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-base);
+  color: var(--color-text);
+  background: var(--color-bg-white);
+  transition: border-color 0.2s;
+  outline: none;
+}
+.form-input:focus {
+  border-color: var(--color-primary);
+}
+.form-input::placeholder {
+  color: var(--color-text-light);
+}
+
+/* --- 数据表格（覆盖 Element Plus 默认，增加政务风格） --- */
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+.data-table thead {
+  background: #FAFAFA;
+}
+.data-table th {
+  padding: 14px var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-base);
+  border-bottom: 1px solid var(--color-border);
+  white-space: nowrap;
+}
+.data-table td {
+  padding: 14px var(--spacing-md);
+  border-bottom: 1px solid var(--color-border-light);
+  font-size: var(--font-size-base);
+}
+.data-table tbody tr:hover {
+  background: var(--color-bg);
+}
+.data-table tbody tr.row-danger {
+  background: var(--color-danger-bg);
+}
+.data-table tbody tr.row-warning {
+  background: var(--color-warning-bg);
+}
+.data-table .text-center { text-align: center; }
+.data-table .text-right { text-align: right; }
+
+/* --- 通用卡片 --- */
+.card {
+  background: var(--color-bg-white);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-card);
+  padding: var(--spacing-lg);
+}
+
+/* --- 骨架屏动画 --- */
+.skeleton {
+  background: linear-gradient(90deg, #F2F2F2 25%, #E6E6E6 50%, #F2F2F2 75%);
+  background-size: 200% 100%;
+  animation: skeleton-pulse 1.5s ease-in-out infinite;
+  border-radius: var(--radius-sm);
+}
+@keyframes skeleton-pulse {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* --- 通用空状态 --- */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px;
+  color: var(--color-text-secondary);
+}
+.empty-state .empty-icon {
+  font-size: 64px;
+  margin-bottom: var(--spacing-md);
+  opacity: 0.4;
+}
+.empty-state p {
+  font-size: var(--font-size-village);
+}
+
+/* --- 搜索栏 --- */
+.search-bar {
+  display: flex;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+}
+.search-bar .form-input {
+  max-width: 320px;
+}
+
+/* --- 面包屑 --- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-md) 0;
+  font-size: var(--font-size-base);
+  color: var(--color-text-secondary);
+}
+.breadcrumb a { color: var(--color-text-secondary); }
+.breadcrumb a:hover { color: var(--color-primary); }
+.breadcrumb .separator { color: var(--color-text-light); }
+.breadcrumb .current { color: var(--color-text); }
+
+/* --- Element Plus 主题覆盖 --- */
+.el-button--primary {
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+.el-button--primary:hover {
+  background-color: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+}
+
+/* --- 通用响应式 --- */
+@media (max-width: 768px) {
+  .data-table { font-size: 12px; }
+  .data-table th, .data-table td { padding: 10px 8px; }
+  .search-bar { flex-direction: column; }
+  .search-bar .form-input { max-width: 100%; }
+}

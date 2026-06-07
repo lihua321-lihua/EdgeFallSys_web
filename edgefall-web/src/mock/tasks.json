@@ -1,0 +1,44 @@
+[
+  {
+    "task_id": "TASK-001",
+    "elder_name": "张奶奶",
+    "elder_id": "ELD_101",
+    "trigger_reason": "系统检测到老人连续3天门磁未触发（未出门），可能存在健康风险，建议上门查看。",
+    "status": "pending",
+    "create_time": "2026-05-20 08:00"
+  },
+  {
+    "task_id": "TASK-002",
+    "elder_name": "王大爷",
+    "elder_id": "ELD_102",
+    "trigger_reason": "系统检测到老人近一周UWB轨迹极度单一（仅在卧室-卫生间往返），社交活跃度异常降低。",
+    "status": "pending",
+    "create_time": "2026-05-19 10:30"
+  },
+  {
+    "task_id": "TASK-003",
+    "elder_name": "李奶奶",
+    "elder_id": "ELD_103",
+    "trigger_reason": "系统检测到老人步态异常频率增高，本月AI评估显示跌倒风险上升，建议提前干预。",
+    "status": "pending",
+    "create_time": "2026-05-18 14:15"
+  },
+  {
+    "task_id": "TASK-004",
+    "elder_name": "赵爷爷",
+    "elder_id": "ELD_105",
+    "trigger_reason": "系统检测到老人连续5天未外出，已上门走访确认：老人因天气炎热居家纳凉，身体状态良好。",
+    "status": "completed",
+    "create_time": "2026-05-15 09:00",
+    "feedback": "老人因天气炎热居家纳凉，身体状态良好"
+  },
+  {
+    "task_id": "TASK-005",
+    "elder_name": "钱奶奶",
+    "elder_id": "ELD_106",
+    "trigger_reason": "系统检测到UWB轨迹异常波动，已上门走访确认：老人感冒卧床，已通知村医拿药，目前恢复良好。",
+    "status": "completed",
+    "create_time": "2026-05-10 16:45",
+    "feedback": "老人感冒卧床，已通知村医拿药，目前恢复良好"
+  }
+]
