@@ -27,24 +27,40 @@
             <el-button type="primary" size="small" @click="openAddDialog">+ 新增账号</el-button>
           </div>
 
-          <el-table :data="filteredAccounts" stripe border style="width: 100%">
+          <el-table v-loading="loading" :data="filteredAccounts" stripe border style="width: 100%">
             <el-table-column prop="username" label="用户名" width="140">
               <template #default="{ row }">
                 <strong>{{ row.username }}</strong>
               </template>
             </el-table-column>
-            <el-table-column prop="village" label="所属村" width="100" />
-            <el-table-column label="角色" width="140">
+            <el-table-column label="所属村" width="100">
               <template #default="{ row }">
-                <el-tag :type="roleTagType(row.role)" size="small">{{ row.role }}</el-tag>
+                {{ row.village_name || '—' }}
               </template>
             </el-table-column>
-            <el-table-column prop="last_login" label="最后登录" width="160" />
+            <el-table-column label="角色" width="140">
+              <template #default="{ row }">
+                <el-tag :type="roleTagType(row.role)" size="small">{{ roleLabel(row.role) }}</el-tag>
+              </template>
+            </el-table-column>
+            <el-table-column label="状态" width="80">
+              <template #default="{ row }">
+                <el-tag :type="row.status === 'active' ? 'success' : 'danger'" size="small">
+                  {{ row.status === 'active' ? '正常' : '禁用' }}
+                </el-tag>
+              </template>
+            </el-table-column>
             <el-table-column label="操作">
               <template #default="{ row }">
-                <el-button type="primary" link size="small" @click="openRoleDialog(row)">编辑</el-button>
-                <el-button v-if="row.role !== '超级管理员'" type="danger" link size="small" @click="toggleDisable(row)">
-                  {{ row.disabled ? '启用' : '禁用' }}
+                <el-button type="primary" link size="small" @click="openEditDialog(row)">编辑</el-button>
+                <el-button
+                  v-if="row.role !== 'super_admin'"
+                  :type="row.status === 'active' ? 'danger' : 'success'"
+                  link
+                  size="small"
+                  @click="toggleDisable(row)"
+                >
+                  {{ row.status === 'active' ? '禁用' : '启用' }}
                 </el-button>
               </template>
             </el-table-column>
@@ -53,23 +69,35 @@
       </el-col>
     </el-row>
 
-    <!-- 角色配置弹窗 -->
-    <el-dialog v-model="roleDialogVisible" :title="'角色配置 - ' + currentUser?.username" width="420px">
-      <p style="margin-bottom: var(--spacing-md); color: var(--color-text-secondary);">请选择角色：</p>
-      <el-radio-group v-model="selectedRole">
-        <el-radio value="村级网格员">村级网格员</el-radio>
-        <el-radio value="村医">村医</el-radio>
-        <el-radio value="超级管理员">超级管理员</el-radio>
-      </el-radio-group>
-      <el-alert
-        title="村级网格员：查看本村工单+走访任务 | 村医：仅查看健康档案 | 超级管理员：全盘数据"
-        type="info"
-        :closable="false"
-        style="margin-top: var(--spacing-md);"
-      />
+    <!-- 编辑账号弹窗 -->
+    <el-dialog v-model="editDialogVisible" :title="'编辑账号 - ' + editingUser?.username" width="420px">
+      <el-form label-position="top">
+        <el-form-item label="显示名称">
+          <el-input v-model="editForm.display_name" placeholder="输入显示名称" />
+        </el-form-item>
+        <el-form-item label="角色">
+          <el-select v-model="editForm.role" placeholder="选择角色" style="width: 100%">
+            <el-option label="村级网格员" value="village_grid" />
+            <el-option label="村医" value="village_doctor" />
+            <el-option label="管理员" value="admin" />
+            <el-option label="超级管理员" value="super_admin" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属村">
+          <el-select v-model="editForm.village_id" placeholder="选择村庄" style="width: 100%">
+            <el-option label="桂花村" :value="1" />
+            <el-option label="杨柳村" :value="2" />
+            <el-option label="石门村" :value="3" />
+            <el-option label="桃花村" :value="4" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="重置密码（留空不修改）">
+          <el-input v-model="editForm.password" type="password" placeholder="输入新密码" show-password />
+        </el-form-item>
+      </el-form>
       <template #footer>
-        <el-button @click="roleDialogVisible = false">取消</el-button>
-        <el-button type="primary" @click="saveRole">保存</el-button>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveEdit">保存</el-button>
       </template>
     </el-dialog>
 
@@ -79,16 +107,26 @@
         <el-form-item label="用户名">
           <el-input v-model="newAccount.username" placeholder="输入用户名" />
         </el-form-item>
+        <el-form-item label="密码">
+          <el-input v-model="newAccount.password" type="password" placeholder="输入密码（至少6位）" show-password />
+        </el-form-item>
+        <el-form-item label="显示名称">
+          <el-input v-model="newAccount.display_name" placeholder="输入显示名称" />
+        </el-form-item>
         <el-form-item label="所属村">
-          <el-select v-model="newAccount.village" placeholder="选择村庄" style="width: 100%">
-            <el-option v-for="v in villages" :key="v" :label="v" :value="v" />
+          <el-select v-model="newAccount.village_id" placeholder="选择村庄" style="width: 100%">
+            <el-option label="桂花村" :value="1" />
+            <el-option label="杨柳村" :value="2" />
+            <el-option label="石门村" :value="3" />
+            <el-option label="桃花村" :value="4" />
           </el-select>
         </el-form-item>
         <el-form-item label="角色">
           <el-select v-model="newAccount.role" placeholder="选择角色" style="width: 100%">
-            <el-option label="村级网格员" value="村级网格员" />
-            <el-option label="村医" value="村医" />
-            <el-option label="超级管理员" value="超级管理员" />
+            <el-option label="村级网格员" value="village_grid" />
+            <el-option label="村医" value="village_doctor" />
+            <el-option label="管理员" value="admin" />
+            <el-option label="超级管理员" value="super_admin" />
           </el-select>
         </el-form-item>
       </el-form>
@@ -103,40 +141,56 @@
 <script setup>
 /**
  * 组织架构 - 树节点展开折叠、角色配置、账号管理
+ * 数据来源：后端 /api/v1/admin/accounts 接口
  */
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
+import { getAccounts, createAccount, updateAccount, toggleAccountStatus } from '@/api/accounts'
 
-const selectedVillage = ref('桂花村')
-const roleDialogVisible = ref(false)
+const loading = ref(false)
+const selectedVillage = ref('全部')
+const editDialogVisible = ref(false)
 const addDialogVisible = ref(false)
-const currentUser = ref(null)
-const selectedRole = ref('')
-const newAccount = ref({ username: '', village: '', role: '' })
+const editingUser = ref(null)
+const editForm = ref({ display_name: '', role: '', village_id: null, password: '' })
+const newAccount = ref({ username: '', password: '', display_name: '', village_id: null, role: 'village_grid' })
 
 const villages = ['桂花村', '杨柳村', '石门村', '桃花村']
+const villageIdMap = { '桂花村': 1, '杨柳村': 2, '石门村': 3, '桃花村': 4 }
 
 const treeData = ref([
   {
     label: '桂花镇',
-    children: villages.map(v => ({ label: v })),
+    children: [
+      { label: '全部' },
+      ...villages.map(v => ({ label: v })),
+    ],
   },
 ])
 
-const accounts = ref([
-  { username: 'zhang_grid', village: '桂花村', role: '村级网格员', last_login: '2026-05-25 14:30', disabled: false },
-  { username: 'wang_grid', village: '桂花村', role: '村级网格员', last_login: '2026-05-25 09:15', disabled: false },
-  { username: 'li_doctor', village: '桂花村', role: '村医', last_login: '2026-05-24 16:45', disabled: false },
-  { username: 'admin_wang', village: '—', role: '超级管理员', last_login: '2026-05-25 15:00', disabled: false },
-])
+const accounts = ref([])
 
 const filteredAccounts = computed(() => {
   if (selectedVillage.value === '全部') return accounts.value
-  return accounts.value.filter(a => a.village === selectedVillage.value || a.village === '—')
+  return accounts.value.filter(a => a.village_name === selectedVillage.value || !a.village_name)
 })
 
 function roleTagType(role) {
-  return { '村级网格员': 'info', '村医': 'success', '超级管理员': 'warning' }[role] || 'info'
+  return {
+    'village_grid': 'info',
+    'village_doctor': 'success',
+    'admin': 'warning',
+    'super_admin': 'danger',
+  }[role] || 'info'
+}
+
+function roleLabel(role) {
+  return {
+    'village_grid': '村级网格员',
+    'village_doctor': '村医',
+    'admin': '管理员',
+    'super_admin': '超级管理员',
+  }[role] || role
 }
 
 function handleNodeClick(node) {
@@ -145,43 +199,84 @@ function handleNodeClick(node) {
   }
 }
 
-function openRoleDialog(user) {
-  currentUser.value = user
-  selectedRole.value = user.role
-  roleDialogVisible.value = true
-}
-
-function saveRole() {
-  if (currentUser.value) {
-    currentUser.value.role = selectedRole.value
-    ElMessage.success('角色已更新')
+async function fetchAccounts() {
+  loading.value = true
+  try {
+    const res = await getAccounts()
+    accounts.value = res.items || []
+  } catch (e) {
+    ElMessage.error('获取账号列表失败')
+  } finally {
+    loading.value = false
   }
-  roleDialogVisible.value = false
 }
 
-function toggleDisable(user) {
-  user.disabled = !user.disabled
-  ElMessage.success(user.disabled ? '已禁用' : '已启用')
+function openEditDialog(user) {
+  editingUser.value = user
+  editForm.value = {
+    display_name: user.display_name,
+    role: user.role,
+    village_id: user.village_id,
+    password: '',
+  }
+  editDialogVisible.value = true
+}
+
+async function saveEdit() {
+  if (!editingUser.value) return
+  try {
+    const data = { ...editForm.value }
+    if (!data.password) delete data.password
+    await updateAccount(editingUser.value.id, data)
+    ElMessage.success('账号已更新')
+    editDialogVisible.value = false
+    await fetchAccounts()
+  } catch (e) {
+    ElMessage.error(e?.detail || '更新失败')
+  }
+}
+
+async function toggleDisable(user) {
+  const newStatus = user.status === 'active' ? 'disabled' : 'active'
+  try {
+    await toggleAccountStatus(user.id, { status: newStatus })
+    ElMessage.success(newStatus === 'disabled' ? '已禁用' : '已启用')
+    await fetchAccounts()
+  } catch (e) {
+    ElMessage.error(e?.detail || '操作失败')
+  }
 }
 
 function openAddDialog() {
-  newAccount.value = { username: '', village: selectedVillage.value, role: '村级网格员' }
+  newAccount.value = {
+    username: '',
+    password: '',
+    display_name: '',
+    village_id: villageIdMap[selectedVillage.value] || null,
+    role: 'village_grid',
+  }
   addDialogVisible.value = true
 }
 
-function addAccount() {
-  if (!newAccount.value.username || !newAccount.value.village || !newAccount.value.role) {
+async function addAccount() {
+  const { username, password, display_name, role, village_id } = newAccount.value
+  if (!username || !password || !display_name || !role) {
     ElMessage.warning('请填写完整信息')
     return
   }
-  accounts.value.push({
-    ...newAccount.value,
-    last_login: '-',
-    disabled: false,
-  })
-  ElMessage.success('账号已创建')
-  addDialogVisible.value = false
+  try {
+    await createAccount({ username, password, display_name, role, village_id })
+    ElMessage.success('账号已创建')
+    addDialogVisible.value = false
+    await fetchAccounts()
+  } catch (e) {
+    ElMessage.error(e?.detail || '创建失败')
+  }
 }
+
+onMounted(() => {
+  fetchAccounts()
+})
 </script>
 
 <style scoped>
