@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import VisitTask
 from app.routers.auth import get_current_user, require_roles
 from app.schemas import FeedbackRequest
+from app.services.rbac import apply_village_filter, check_village_access
 
 router = APIRouter(
     prefix="/api/v1/admin/tasks/visits",
@@ -27,6 +28,7 @@ async def list_tasks(
     query = select(VisitTask)
     if status in ("pending", "completed"):
         query = query.where(VisitTask.status == status)
+    query = apply_village_filter(query, VisitTask, user)  # Phase 2: RBAC 行级隔离
     query = query.order_by(VisitTask.create_time.desc())
 
     result = await db.execute(query)
@@ -59,6 +61,7 @@ async def submit_feedback(
 
     if not task:
         raise HTTPException(status_code=404, detail="走访任务不存在")
+    check_village_access(task.village_id, user)
     if task.status == "completed":
         raise HTTPException(status_code=400, detail="任务已完成，不可重复提交")
 

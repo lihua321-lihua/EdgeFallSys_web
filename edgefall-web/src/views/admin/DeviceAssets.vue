@@ -372,9 +372,6 @@ async function processImport(text) {
 
   importResult.value = result
   importing.value = false
-
-  // 记录操作日志
-  console.log(`[操作日志] 批量导入：成功 ${result.successCount} 条，失败 ${result.failCount} 条，操作人：${authStore.displayName}`)
 }
 
 function cancelImport() {
@@ -460,9 +457,6 @@ async function handleExport() {
 
   exportProgress.value = 100
   exporting.value = false
-
-  // 记录操作日志
-  console.log(`[操作日志] 导出CSV：${dataToExport.length} 条数据，操作人：${authStore.displayName}`)
 }
 
 onMounted(() => {

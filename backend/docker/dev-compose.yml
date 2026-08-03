@@ -1,0 +1,68 @@
+# 开发环境 Docker Compose：仅启动基础设施，API 仍本地运行
+version: "3.8"
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: edgefall-pg
+    environment:
+      POSTGRES_USER: edgesys
+      POSTGRES_PASSWORD: change-me
+      POSTGRES_DB: edgesys
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U edgesys"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:7-alpine
+    container_name: edgefall-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tdengine:
+    image: tdengine/tdengine:3.3.4.8
+    container_name: edgefall-tdengine
+    ports:
+      - "6030:6030"
+      - "6041:6041"
+    volumes:
+      - td_data:/var/lib/taos
+    environment:
+      TAOS_FQDN: tdengine
+    healthcheck:
+      test: ["CMD", "taos", "-s", "SELECT SERVER_VERSION();"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mosquitto:
+    image: eclipse-mosquitto:2
+    container_name: edgefall-mosquitto
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
+    healthcheck:
+      test: ["CMD", "mosquitto_pub", "-t", "healthcheck", "-m", "ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  pg_data:
+  redis_data:
+  td_data:

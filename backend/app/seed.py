@@ -1,13 +1,18 @@
 """
 种子数据脚本 - 从前端Mock JSON读取数据，批量写入SQLite数据库
+Phase 2: 新增乡镇/村庄、门磁事件、AI 报告种子数据
 """
 import json
 import asyncio
 from pathlib import Path
 from passlib.context import CryptContext
+from sqlalchemy import select
 
 from app.database import async_session, init_db
-from app.models import Account, Elder, Device, Alert, VisitTask, ApiUsage
+from app.models import (
+    Account, Elder, Device, Alert, VisitTask, ApiUsage,
+    HealthReport, DoorEvent, Town, Village,
+)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 DEFAULT_PASSWORD = "123456"
@@ -122,7 +127,88 @@ async def run():
                             monthly_limit=llm.get("monthly_limit", 1000000),
                             latency_ms=llm.get("latency_ms", 0),
                             cost_estimate=llm.get("cost_estimate_cny", 0), record_date="2026-06-16"))
-            print(f"  [OK] API 用量数据")
+            print("  [OK] API 用量数据")
+
+        # —— Phase 2 新增种子数据 ——
+        print("导入 Phase 2 种子数据:")
+
+        # 乡镇 + 村庄
+        db.add(Town(id=1, name="桂花镇"))
+        db.add(Village(id=1, town_id=1, name="桂花村"))
+        db.add(Village(id=2, town_id=1, name="杨柳村"))
+        db.add(Village(id=3, town_id=1, name="石门村"))
+        db.add(Village(id=4, town_id=1, name="桃花村"))
+        print("  [OK] 1 个乡镇 + 4 个村庄")
+
+        # 回填已有表的 village_id（所有种子数据都属于桂花村，village_id=1）
+        for table in [Elder, Device, Alert, VisitTask]:
+            result = await db.execute(select(table))
+            for row in result.scalars().all():
+                row.village_id = 1
+        print("  [OK] 回填 Elder/Device/Alert/VisitTask 的 village_id=1")
+
+        # 门磁事件种子数据（从 elder-detail.json 的 recent_activities 提取）
+        detail = load_json("elder-detail.json") or {}
+        activities = detail.get("recent_activities", [])
+        if activities:
+            elder_id = detail.get("elder_id", "ELD_101")
+            door_count = 0
+            for act in activities:
+                # 跳过 open 和 close 都为 None 的记录（无实际时间信息）
+                open_time = act.get("open")
+                close_time = act.get("close")
+                date_str = act.get("date", "")
+                # 将中文日期转为 ISO 格式：假设当前年份 2026，"06月15日" → "2026-06-15"
+                iso_date = f"2026-{date_str[:2]}-{date_str[3:5]}" if len(date_str) >= 5 else None
+
+                if not open_time and not close_time:
+                    # 无开门记录 → 生成一条 close 事件表示当天无活动
+                    if iso_date:
+                        db.add(DoorEvent(
+                            elder_id=elder_id,
+                            village_id=1,
+                            event_type="close",
+                            event_time=f"{iso_date} 00:00",
+                            event_date=iso_date,
+                        ))
+                        door_count += 1
+                    continue
+
+                # 有开门时间 → 生成 open 事件
+                if iso_date and open_time:
+                    db.add(DoorEvent(
+                        elder_id=elder_id,
+                        village_id=1,
+                        event_type="open",
+                        event_time=f"{iso_date} {open_time}",
+                        event_date=iso_date,
+                    ))
+                    door_count += 1
+                if iso_date and close_time:
+                    db.add(DoorEvent(
+                        elder_id=elder_id,
+                        village_id=1,
+                        event_type="close",
+                        event_time=f"{iso_date} {close_time}",
+                        event_date=iso_date,
+                    ))
+                    door_count += 1
+            print(f"  [OK] {door_count} 条门磁事件")
+
+        # AI 报告种子数据（初版静态文本，后续 M4 覆盖）
+        elders = (await db.execute(select(Elder))).scalars().all()
+        for e in elders:
+            tags = json.loads(e.risk_tags) if e.risk_tags else []
+            db.add(HealthReport(
+                elder_id=e.elder_id,
+                report_month="2026-06",
+                risk_tags=json.dumps(tags, ensure_ascii=False),
+                ai_summary=f"经系统分析，{e.name}本月整体状况良好。建议保持现有生活习惯，关注季节变化。",
+                data_source="手环活动记录 + 门磁数据",
+                generated_by="qwen-max",
+                created_at="2026-06-15",
+            ))
+        print(f"  [OK] {len(elders)} 份 AI 报告（种子）")
 
         await db.commit()
     print(f"\n[DONE] 种子数据全部导入完成！默认密码: {DEFAULT_PASSWORD}")

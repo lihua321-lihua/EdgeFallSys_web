@@ -5,8 +5,14 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 from sqlalchemy.orm import DeclarativeBase
 from app.config import settings
 
-# 异步引擎（echo=False 不打印 SQL，调试时改 True）
-engine = create_async_engine(settings.database_url, echo=False)
+# SQLite 不支持 pool_size / max_overflow / pool_pre_ping，按数据库类型条件传参
+_is_sqlite = settings.database_url.startswith("sqlite")
+
+_engine_kwargs = dict(echo=False)
+if not _is_sqlite:
+    _engine_kwargs.update(pool_size=20, max_overflow=10, pool_pre_ping=True)
+
+engine = create_async_engine(settings.database_url, **_engine_kwargs)
 
 # Session 工厂
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

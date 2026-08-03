@@ -9,6 +9,7 @@ from app.database import get_db
 from app.models import Device, ApiUsage, Elder
 from app.routers.auth import get_current_user, require_roles
 from app.schemas import RebindRequest
+from app.services.rbac import apply_village_filter
 
 router = APIRouter(
     prefix="/api/v1/admin",
@@ -28,6 +29,7 @@ async def list_devices(
     query = select(Device)
     if type in ("BRACELET", "GATEWAY", "CAMERA"):
         query = query.where(Device.type == type)
+    query = apply_village_filter(query, Device, user)  # Phase 2: RBAC 行级隔离（预留，当前仅管理员可访问）
 
     result = await db.execute(query)
     devices = result.scalars().all()
@@ -113,5 +115,18 @@ async def get_api_usage(
                 "latency_ms": r.latency_ms or 0,
                 "cost_estimate_cny": r.cost_estimate or 0.0,
             }
+
+    # Redis 实时计数覆盖数据库值
+    try:
+        from app.services.redis_client import get_api_counter
+        qwen_redis = await get_api_counter("qwen")
+        if qwen_redis:
+            llm["api_calls_today"] = qwen_redis.get("api_calls", llm["api_calls_today"])
+            llm["tokens_today"] = qwen_redis.get("tokens", llm["tokens_today"])
+        ezviz_redis = await get_api_counter("ezviz")
+        if ezviz_redis:
+            ezviz["calls_today"] = ezviz_redis.get("calls", ezviz["calls_today"])
+    except Exception:
+        pass
 
     return {"code": 200, "data": {"ezviz_api": ezviz, "llm_qwen": llm}}

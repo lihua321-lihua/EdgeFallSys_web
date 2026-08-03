@@ -9,7 +9,7 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.database import get_db
-from app.models import Account
+from app.models import Account, Village
 from app.config import settings
 from app.schemas import LoginRequest
 
@@ -54,7 +54,9 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
                 "display_name": account.display_name,   # 前端读 res.user.display_name
                 "role": account.role,
                 "village_id": account.village_id,
-                "village_name": "桂花村" if account.village_id else None,
+                "village_name": (lambda v: v.name if v else None)(
+                    (await db.execute(select(Village).where(Village.id == account.village_id))).scalar_one_or_none()
+                ) if account.village_id else None,
             },
         },
     }
@@ -88,6 +90,17 @@ async def get_current_user(
     if not user or user.status == "disabled":
         raise HTTPException(status_code=401, detail="用户不存在或已被禁用")
 
+    # 检查 Redis 中的禁用标记
+    try:
+        from app.services.redis_client import get_redis
+        r = await get_redis()
+        if await r.exists(f"user_disabled:{user_id}"):
+            raise HTTPException(status_code=401, detail="账号已被禁用，请联系管理员")
+    except HTTPException:
+        raise
+    except Exception:
+        pass
+
     return user
 
 
@@ -120,3 +133,9 @@ def require_roles(*allowed_roles: str):
             )
         return user
     return _check_role
+
+
+@router.post("/logout")
+async def logout(user=Depends(get_current_user)):
+    """登出：前端清除本地 Token 即可。"""
+    return {"code": 200, "data": {"message": "已登出"}}

@@ -42,7 +42,7 @@ watch(() => authStore.isLoggedIn, (val) => {
       console.warn('设备低电量:', msg)
     })
     wsClient.on('task_assigned', (msg) => {
-      console.log('新走访任务派发:', msg)
+      // TODO: 接入走访任务通知 UI
     })
   } else {
     wsClient.disconnect()

@@ -2,7 +2,7 @@
 Pydantic校验模型 - 接口请求参数定义，响应格式约定为 { code: 200, data: ... }
 """
 from pydantic import BaseModel, Field
-from typing import Optional, List
+from typing import Optional
 
 
 # ==================== 认证（Auth） ====================

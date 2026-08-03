@@ -7,8 +7,9 @@ from sqlalchemy.ext.asyncio import AsyncSession
 import json
 
 from app.database import get_db
-from app.models import Elder
+from app.models import Elder, HealthReport
 from app.routers.auth import get_current_user, require_roles
+from app.services.rbac import apply_village_filter, check_village_access
 
 router = APIRouter(
     prefix="/api/v1/admin/elders",
@@ -31,6 +32,7 @@ async def list_elders(
         query = query.where(
             (Elder.name.contains(keyword)) | (Elder.address.contains(keyword))
         )
+    query = apply_village_filter(query, Elder, user)  # Phase 2: RBAC 行级隔离
 
     # 总数
     count_result = await db.execute(select(func.count()).select_from(query.subquery()))
@@ -65,6 +67,7 @@ async def get_elder(
 
     if not e:
         raise HTTPException(status_code=404, detail="老人不存在")
+    check_village_access(e.village_id, user)  # Phase 2: RBAC 校验
 
     return {
         "code": 200,
@@ -93,20 +96,42 @@ async def get_ai_report(
     db: AsyncSession = Depends(get_db),
     user = Depends(get_current_user),
 ):
-    """AI 健康报告。前端 ElderDetail.vue:169: aiReport.value = reportRes.value
-    MVP 阶段返回静态文本，Phase 2 改为调用大模型生成"""
-
+    """AI 健康报告。从 health_reports 表查询（M4）。"""
+    # 先查老人并校验 RBAC
     result = await db.execute(select(Elder).where(Elder.elder_id == elder_id))
     e = result.scalar_one_or_none()
+    if not e:
+        raise HTTPException(status_code=404, detail="老人不存在")
+    check_village_access(e.village_id, user)
 
-    tags = json.loads(e.risk_tags) if e and e.risk_tags else []
+    # 查最新报告
+    report_result = await db.execute(
+        select(HealthReport)
+        .where(HealthReport.elder_id == elder_id)
+        .order_by(HealthReport.created_at.desc())
+        .limit(1)
+    )
+    report = report_result.scalar_one_or_none()
+
+    if not report:
+        return {
+            "code": 200,
+            "data": {
+                "report_date": "2026-06",
+                "risk_tags": [],
+                "ai_summary": "暂无 AI 评估报告",
+                "data_source": "",
+            },
+        }
+
+    tags = json.loads(report.risk_tags) if report.risk_tags else []
 
     return {
         "code": 200,
         "data": {
-            "report_date": "2026-06",
+            "report_date": report.report_month,
             "risk_tags": tags,
-            "ai_summary": "经系统分析，本月老人情绪状态尚可，步态平稳度正常。外出活动量较上月略有增加，社交活跃度良好。建议继续保持日常活动习惯，关注天气变化对关节的影响。",
-            "data_source": "手环UWB轨迹 + 门磁活动记录",
+            "ai_summary": report.ai_summary,
+            "data_source": report.data_source or "",
         },
     }

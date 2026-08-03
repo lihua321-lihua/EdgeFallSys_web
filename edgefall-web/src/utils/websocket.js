@@ -17,14 +17,19 @@ class WebSocketClient {
     this.isManualClose = false
     this.token = token
     this.reconnectCount = 0
-    const url = `${import.meta.env.VITE_WS_URL}?token=${token}`
+    // Phase 2: Token 改为首条消息 AUTH 传递，不再放 URL Query
+    const url = `${import.meta.env.VITE_WS_URL}`
 
     this.ws = new WebSocket(url)
 
     this.ws.onopen = () => {
-      console.log('[WS] 连接成功')
       this.reconnectCount = 0
       this._startHeartbeat()
+      // Phase 2: 首条消息发送 AUTH 认证
+      this.ws.send(JSON.stringify({
+        type: 'AUTH',
+        token: this.token,
+      }))
     }
 
     this.ws.onclose = (event) => {
@@ -108,7 +113,6 @@ class WebSocketClient {
     this.reconnectCount++
     const delay = Math.min(Math.pow(2, this.reconnectCount - 1) * 1000, 30000)
     this.reconnectTimer = setTimeout(() => {
-      console.log(`[WS] 第 ${this.reconnectCount} 次重连...`)
       this.connect(this.token)
     }, delay)
   }

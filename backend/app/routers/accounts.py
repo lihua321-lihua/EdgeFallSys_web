@@ -1,12 +1,13 @@
 """
-账号管理 - 账号列表（村庄筛选）、新增账号、编辑账号、启用/禁用
+账号管理 - 账号列表（村庄筛选）、新增账号、编辑账号、启用/禁用、重置密码
 """
+import secrets
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select, func
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Account
+from app.models import Account, Village
 from app.routers.auth import get_current_user, require_roles, pwd_context
 from app.schemas import CreateAccountRequest, UpdateAccountRequest, ToggleAccountRequest
 
@@ -16,8 +17,13 @@ router = APIRouter(
     dependencies=[Depends(require_roles("admin", "super_admin"))],
 )
 
-# 村庄映射（与种子数据一致）
-VILLAGE_MAP = {1: "桂花村", 2: "杨柳村", 3: "石门村", 4: "桃花村"}
+
+async def _get_village_name(db: AsyncSession, village_id: int | None) -> str | None:
+    """从 Village 表查询村庄名称"""
+    if not village_id:
+        return None
+    v = (await db.execute(select(Village).where(Village.id == village_id))).scalar_one_or_none()
+    return v.name if v else None
 
 
 @router.get("")
@@ -42,7 +48,7 @@ async def list_accounts(
             "display_name": a.display_name,
             "role": a.role,
             "village_id": a.village_id,
-            "village_name": VILLAGE_MAP.get(a.village_id) if a.village_id else None,
+            "village_name": await _get_village_name(db, a.village_id),
             "status": a.status,
             "disabled": a.status == "disabled",
         })
@@ -57,12 +63,10 @@ async def create_account(
     user=Depends(get_current_user),
 ):
     """新增账号"""
-    # 检查用户名是否已存在
     existing = await db.execute(select(Account).where(Account.username == req.username))
     if existing.scalar_one_or_none():
         raise HTTPException(status_code=400, detail="用户名已存在")
 
-    # 仅 super_admin 可创建 admin/super_admin 角色
     if req.role in ("admin", "super_admin") and user.role != "super_admin":
         raise HTTPException(status_code=403, detail="仅超级管理员可创建管理员账号")
 
@@ -85,7 +89,7 @@ async def create_account(
             "display_name": account.display_name,
             "role": account.role,
             "village_id": account.village_id,
-            "village_name": VILLAGE_MAP.get(account.village_id) if account.village_id else None,
+            "village_name": await _get_village_name(db, account.village_id),
             "status": account.status,
         },
     }
@@ -105,11 +109,9 @@ async def update_account(
     if not account:
         raise HTTPException(status_code=404, detail="账号不存在")
 
-    # 仅 super_admin 可修改为 admin/super_admin 角色
     if req.role and req.role in ("admin", "super_admin") and user.role != "super_admin":
         raise HTTPException(status_code=403, detail="仅超级管理员可分配管理员角色")
 
-    # 不允许修改自己的角色
     if account.id == user.id and req.role and req.role != user.role:
         raise HTTPException(status_code=400, detail="不能修改自己的角色")
 
@@ -132,7 +134,7 @@ async def update_account(
             "display_name": account.display_name,
             "role": account.role,
             "village_id": account.village_id,
-            "village_name": VILLAGE_MAP.get(account.village_id) if account.village_id else None,
+            "village_name": await _get_village_name(db, account.village_id),
             "status": account.status,
         },
     }
@@ -152,15 +154,49 @@ async def toggle_account_status(
     if not account:
         raise HTTPException(status_code=404, detail="账号不存在")
 
-    # 不允许禁用自己
     if account.id == user.id:
         raise HTTPException(status_code=400, detail="不能禁用自己的账号")
 
-    # 仅 super_admin 可禁用 admin
     if account.role in ("admin", "super_admin") and user.role != "super_admin":
         raise HTTPException(status_code=403, detail="仅超级管理员可禁用管理员账号")
 
     account.status = req.status
     await db.flush()
 
+    # Redis 禁用/启用标记
+    if req.status == "disabled":
+        try:
+            from app.services.redis_client import get_redis
+            from app.config import settings
+            r = await get_redis()
+            expire_seconds = settings.jwt_expire_minutes * 60
+            await r.setex(f"user_disabled:{account.id}", expire_seconds, "1")
+        except Exception:
+            pass
+    elif req.status == "active":
+        try:
+            from app.services.redis_client import get_redis
+            r = await get_redis()
+            await r.delete(f"user_disabled:{account.id}")
+        except Exception:
+            pass
+
     return {"code": 200, "data": {"id": account.id, "status": account.status}}
+
+
+@router.post("/{account_id}/reset-password")
+async def reset_password(
+    account_id: int,
+    db: AsyncSession = Depends(get_db),
+    user = Depends(require_roles("super_admin")),
+):
+    """重置密码。返回明文新密码，由前端展示给管理员。"""
+    account = (await db.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
+    if not account:
+        raise HTTPException(status_code=404, detail="账号不存在")
+
+    new_password = secrets.token_urlsafe(8)
+    account.password_hash = pwd_context.hash(new_password)
+    await db.flush()
+
+    return {"code": 200, "data": {"id": account.id, "new_password": new_password}}
