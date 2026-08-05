@@ -1,0 +1,23 @@
+fastapi==0.115.0
+uvicorn[standard]==0.30.0
+sqlalchemy[asyncio]==2.0.35
+aiosqlite==0.20.0
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+bcrypt==4.0.1
+python-multipart==0.0.9
+pydantic-settings==2.5.0
+
+# Phase 2
+asyncpg==0.31.0
+alembic==1.18.4
+apscheduler==3.11.2
+dashscope==1.25.24
+httpx==0.28.1
+
+# Phase 3
+celery[redis]==5.4.0
+redis==5.2.0
+paho-mqtt==2.1.0
+flower==2.0.1
+psycopg2-binary==2.9.9

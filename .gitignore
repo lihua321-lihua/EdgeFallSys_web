@@ -77,6 +77,8 @@ out/
 .env
 .env.*
 !.env.example
+!.env.development
+!.env.production
 *.pem
 *.key
 *.crt
@@ -100,6 +102,8 @@ docker-compose.override.yml
 *.sqlite3
 *.db
 *.sql.bak
+*.db.bak
+*.bak
 
 # ========================
 # TDengine

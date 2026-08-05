@@ -1,0 +1,15 @@
+{
+  "ezviz_api": {
+    "calls_today": 1234,
+    "limit_daily": 5000
+  },
+  "llm_qwen": {
+    "tokens_today": 45678,
+    "tokens_week": 312456,
+    "tokens_month": 456789,
+    "monthly_limit": 1000000,
+    "api_calls_today": 156,
+    "latency_ms": 235,
+    "cost_estimate_cny": 1.2
+  }
+}

@@ -1,0 +1,98 @@
+[
+  {
+    "elder_id": "ELD_101",
+    "name": "张奶奶",
+    "age": 78,
+    "gender": "女",
+    "address": "桂花村1组",
+    "device_sn": "WB-001",
+    "gateway_sn": "GW-A01",
+    "emergency_contact": "138****1234",
+    "device_status": "ONLINE",
+    "risk_tags": ["跌倒中风险", "情绪低落"]
+  },
+  {
+    "elder_id": "ELD_102",
+    "name": "王大爷",
+    "age": 82,
+    "gender": "男",
+    "address": "桂花村3组",
+    "device_sn": "WB-002",
+    "gateway_sn": "GW-A01",
+    "emergency_contact": "139****5678",
+    "device_status": "ONLINE",
+    "risk_tags": ["步态平稳"]
+  },
+  {
+    "elder_id": "ELD_103",
+    "name": "李奶奶",
+    "age": 75,
+    "gender": "女",
+    "address": "桂花村2组",
+    "device_sn": "WB-003",
+    "gateway_sn": "GW-A02",
+    "emergency_contact": "136****9012",
+    "device_status": "ONLINE",
+    "risk_tags": ["睡眠质量下降", "步态不稳"]
+  },
+  {
+    "elder_id": "ELD_105",
+    "name": "赵爷爷",
+    "age": 80,
+    "gender": "男",
+    "address": "桂花村4组",
+    "device_sn": "WB-005",
+    "gateway_sn": "GW-A02",
+    "emergency_contact": "137****3456",
+    "device_status": "ONLINE",
+    "risk_tags": ["各项指标正常"]
+  },
+  {
+    "elder_id": "ELD_106",
+    "name": "钱奶奶",
+    "age": 71,
+    "gender": "女",
+    "address": "桂花村1组",
+    "device_sn": "WB-006",
+    "gateway_sn": "GW-A01",
+    "emergency_contact": "135****7890",
+    "device_status": "ONLINE",
+    "risk_tags": ["活动量减少"]
+  },
+  {
+    "elder_id": "ELD_201",
+    "name": "孙爷爷",
+    "age": 79,
+    "gender": "男",
+    "address": "杨柳村2组",
+    "device_sn": "WB-101",
+    "gateway_sn": "GW-B01",
+    "emergency_contact": "138****2222",
+    "device_status": "ONLINE",
+    "risk_tags": ["高血压高危", "用药不规律"]
+  },
+  {
+    "elder_id": "ELD_202",
+    "name": "周奶奶",
+    "age": 76,
+    "gender": "女",
+    "address": "杨柳村1组",
+    "device_sn": "WB-102",
+    "gateway_sn": "GW-B01",
+    "emergency_contact": "139****3333",
+    "device_status": "ONLINE",
+    "risk_tags": ["糖尿病", "血糖波动大"]
+  },
+  {
+    "elder_id": "ELD_203",
+    "name": "吴大爷",
+    "age": 84,
+    "gender": "男",
+    "address": "杨柳村3组",
+    "device_sn": "WB-103",
+    "gateway_sn": "GW-B02",
+    "emergency_contact": "137****4444",
+    "device_status": "OFFLINE",
+    "risk_tags": ["独居老人", "跌倒高风险"]
+  }
+]
