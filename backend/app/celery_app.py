@@ -44,6 +44,16 @@ celery_app.conf.update(
             "task": "app.celery_tasks.run_device_monitor",
             "schedule": crontab(minute="*/30"),
         },
+        # Step 8: 用量归档（每日 00:05 重置 today + 重算 week/month 滚动窗口）
+        "archive-api-usage": {
+            "task": "app.celery_tasks.archive_api_usage_daily",
+            "schedule": crontab(hour=0, minute=5),
+        },
+        # Step 8: 萤石凭证健康检查（每日 03:00，产生真实调用计数）
+        "ezviz-health-check": {
+            "task": "app.celery_tasks.ezviz_health_check",
+            "schedule": crontab(hour=3, minute=0),
+        },
     },
 )
 

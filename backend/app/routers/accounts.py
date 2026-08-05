@@ -1,13 +1,14 @@
 """
 账号管理 - 账号列表（村庄筛选）、新增账号、编辑账号、启用/禁用、重置密码
 """
-import secrets
+from datetime import datetime
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.database import get_db
-from app.models import Account, Village
+from app.models import Account, Village, PasswordResetRequest
+from app.config import settings
 from app.routers.auth import get_current_user, require_roles, pwd_context
 from app.schemas import CreateAccountRequest, UpdateAccountRequest, ToggleAccountRequest
 
@@ -56,6 +57,29 @@ async def list_accounts(
     return {"code": 200, "data": {"items": items, "total": len(items)}}
 
 
+@router.get("/reset-requests")
+async def list_reset_requests(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """密码重置申请列表 —— 仅返回待处理（pending）的申请，供管理员在组织架构页处理。"""
+    result = await db.execute(
+        select(PasswordResetRequest)
+        .where(PasswordResetRequest.status == "pending")
+        .order_by(PasswordResetRequest.id.desc())
+    )
+    reqs = result.scalars().all()
+    items = [{
+        "id": r.id,
+        "account_id": r.account_id,
+        "username": r.username,
+        "display_name": r.display_name,
+        "requested_at": r.requested_at,
+        "status": r.status,
+    } for r in reqs]
+    return {"code": 200, "data": {"items": items, "total": len(items)}}
+
+
 @router.post("")
 async def create_account(
     req: CreateAccountRequest,
@@ -77,6 +101,7 @@ async def create_account(
         role=req.role,
         village_id=req.village_id,
         status="active",
+        must_change_password=1,   # 新增账号首次登录强制改密码
     )
     db.add(account)
     await db.flush()
@@ -188,15 +213,32 @@ async def toggle_account_status(
 async def reset_password(
     account_id: int,
     db: AsyncSession = Depends(get_db),
-    user = Depends(require_roles("super_admin")),
+    user=Depends(get_current_user),
 ):
-    """重置密码。返回明文新密码，由前端展示给管理员。"""
+    """重置密码为默认初始密码（settings.default_password），并标记该用户的重置申请为已处理。
+    返回明文新密码，由前端展示给管理员转告用户。"""
     account = (await db.execute(select(Account).where(Account.id == account_id))).scalar_one_or_none()
     if not account:
         raise HTTPException(status_code=404, detail="账号不存在")
+    if account.id == user.id:
+        raise HTTPException(status_code=400, detail="请使用「修改密码」功能修改自己的密码")
 
-    new_password = secrets.token_urlsafe(8)
+    new_password = settings.default_password
     account.password_hash = pwd_context.hash(new_password)
-    await db.flush()
+    account.must_change_password = 1
 
+    # 标记该用户待处理的重置申请为已解决
+    pending = (await db.execute(
+        select(PasswordResetRequest).where(
+            PasswordResetRequest.username == account.username,
+            PasswordResetRequest.status == "pending",
+        )
+    )).scalars().all()
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    for r in pending:
+        r.status = "resolved"
+        r.resolved_by = user.display_name
+        r.resolved_at = now
+
+    await db.flush()
     return {"code": 200, "data": {"id": account.id, "new_password": new_password}}

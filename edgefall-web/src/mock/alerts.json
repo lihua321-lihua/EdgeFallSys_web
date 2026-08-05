@@ -40,5 +40,130 @@
       "location": "客厅",
       "ai_diagnosis": "陌生号码长时间通话，心率异常升高"
     }
+  },
+  {
+    "event_id": "EVT_2026_004",
+    "elder_name": "张奶奶",
+    "elder_id": "ELD_101",
+    "type": "INTRUSION_ALERT",
+    "level": "HIGH",
+    "create_time": 1716290000,
+    "status": "pending",
+    "payload": {
+      "title": "夜间异常入侵预警",
+      "location": "后院",
+      "ai_diagnosis": "凌晨2点检测到后院异常移动，疑似陌生人闯入"
+    }
+  },
+  {
+    "event_id": "EVT_2026_005",
+    "elder_name": "王大爷",
+    "elder_id": "ELD_102",
+    "type": "FALL_DETECTED",
+    "level": "CRITICAL",
+    "create_time": 1716200000,
+    "status": "resolved",
+    "action_type": "VISITED",
+    "remark": "上门确认老人卫生间滑倒，未伤及骨骼，已协助起身并叮嘱家属铺设防滑垫。",
+    "handler_name": "张网格员",
+    "handle_time": 1716200600,
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "卫生间",
+      "ai_diagnosis": "左侧着地，未检测到起身"
+    }
+  },
+  {
+    "event_id": "EVT_2026_006",
+    "elder_name": "赵爷爷",
+    "elder_id": "ELD_105",
+    "type": "SCAM_ALERT",
+    "level": "HIGH",
+    "create_time": 1716100000,
+    "status": "resolved",
+    "action_type": "MEDICAL_JUDGE",
+    "medical_judgment": "老人因遭遇诈骗电话情绪激动，血压骤升至 170/100，心率 110。已舌下含服硝苯地平片，现场观察30分钟后血压降至 150/95。建议家属陪同至乡镇卫生院进一步检查，警惕心脑血管事件。",
+    "need_transfer": 1,
+    "handler_name": "李村医",
+    "handle_time": 1716101200,
+    "payload": {
+      "title": "诈骗电话预警",
+      "location": "客厅",
+      "ai_diagnosis": "陌生号码长时间通话，心率异常升高"
+    }
+  },
+  {
+    "event_id": "EVT_2026_007",
+    "elder_name": "钱奶奶",
+    "elder_id": "ELD_106",
+    "type": "FALL_DETECTED",
+    "level": "CRITICAL",
+    "create_time": 1716000000,
+    "status": "resolved",
+    "action_type": "MEDICAL_JUDGE",
+    "medical_judgment": "老人糖尿病合并周围神经病变，跌倒后右髋部疼痛。现场评估：右下肢活动受限，疑似股骨颈骨折。已固定患肢，禁止挪动，紧急呼叫120转送县医院骨科。",
+    "need_transfer": 1,
+    "handler_name": "李村医",
+    "handle_time": 1716001800,
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "卧室",
+      "ai_diagnosis": "右侧着地，未检测到起身超过10分钟"
+    }
+  },
+  {
+    "event_id": "EVT_2026_008",
+    "elder_name": "李奶奶",
+    "elder_id": "ELD_103",
+    "type": "SCAM_ALERT",
+    "level": "HIGH",
+    "create_time": 1715900000,
+    "status": "resolved",
+    "action_type": "CALLED_FAMILY",
+    "remark": "已联系老人女儿，确认陌生号码为推销电话，提醒老人不要轻信陌生人电话，已协助下载国家反诈中心APP。",
+    "handler_name": "张网格员",
+    "handle_time": 1715900800,
+    "payload": {
+      "title": "诈骗电话预警",
+      "location": "客厅",
+      "ai_diagnosis": "陌生号码长时间通话"
+    }
+  },
+  {
+    "event_id": "EVT_2026_009",
+    "elder_name": "张奶奶",
+    "elder_id": "ELD_101",
+    "type": "FALL_DETECTED",
+    "level": "HIGH",
+    "create_time": 1715800000,
+    "status": "resolved",
+    "action_type": "FALSE_ALARM",
+    "remark": "上门核实：老人弯腰捡拾掉落物品触发跌倒检测，本人无任何不适，设备误报。",
+    "handler_name": "张网格员",
+    "handle_time": 1715800500,
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "客厅",
+      "ai_diagnosis": "检测到快速下蹲动作"
+    }
+  },
+  {
+    "event_id": "EVT_2026_010",
+    "elder_name": "王大爷",
+    "elder_id": "ELD_102",
+    "type": "FALL_DETECTED",
+    "level": "CRITICAL",
+    "create_time": 1715700000,
+    "status": "resolved",
+    "action_type": "MEDICAL_JUDGE",
+    "medical_judgment": "老人跌倒后自行起身，主诉头晕乏力。测血压 90/60，心率 55，疑似体位性低血压。嘱其平卧休息，补充水分，调整降压药剂量。无需送医，建议复查血压。",
+    "need_transfer": 0,
+    "handler_name": "李村医",
+    "handle_time": 1715701500,
+    "payload": {
+      "title": "发生疑似跌倒！",
+      "location": "客厅",
+      "ai_diagnosis": "检测到跌倒后缓慢起身"
+    }
   }
 ]

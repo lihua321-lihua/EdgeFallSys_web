@@ -23,11 +23,26 @@
       <el-col :xs="24" :sm="16" :md="18">
         <div class="org-accounts">
           <div class="accounts-header">
-            <h3>账号管理 - {{ selectedVillage }}</h3>
-            <el-button type="primary" size="small" @click="openAddDialog">+ 新增账号</el-button>
-          </div>
+          <h3>账号管理 - {{ selectedVillage }}</h3>
+          <el-button type="primary" size="small" @click="openAddDialog">+ 新增账号</el-button>
+        </div>
 
-          <el-table v-loading="loading" :data="filteredAccounts" stripe border style="width: 100%">
+        <!-- 密码重置申请（来自登录页"忘记密码"提交） -->
+        <div v-if="resetRequests.length > 0" class="reset-requests">
+          <div class="reset-title">密码重置申请（待处理 {{ resetRequests.length }} 条）</div>
+          <el-table :data="resetRequests" stripe border size="small" style="width: 100%">
+            <el-table-column prop="username" label="用户名" width="140" />
+            <el-table-column prop="display_name" label="姓名" width="120" />
+            <el-table-column prop="requested_at" label="申请时间" />
+            <el-table-column label="操作" width="150">
+              <template #default="{ row }">
+                <el-button type="primary" link size="small" @click="handleResetRequest(row)">重置为123456</el-button>
+              </template>
+            </el-table-column>
+          </el-table>
+        </div>
+
+        <el-table v-loading="loading" :data="filteredAccounts" stripe border style="width: 100%">
             <el-table-column prop="username" label="用户名" width="140">
               <template #default="{ row }">
                 <strong>{{ row.username }}</strong>
@@ -91,7 +106,7 @@
             <el-option label="桃花村" :value="4" />
           </el-select>
         </el-form-item>
-        <el-form-item label="重置密码（留空不修改）">
+        <el-form-item label="修改密码（留空不修改）">
           <el-input v-model="editForm.password" type="password" placeholder="输入新密码" show-password />
         </el-form-item>
       </el-form>
@@ -144,8 +159,8 @@
  * 数据来源：后端 /api/v1/admin/accounts 接口
  */
 import { ref, computed, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { getAccounts, createAccount, updateAccount, toggleAccountStatus } from '@/api/accounts'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import { getAccounts, createAccount, updateAccount, toggleAccountStatus, getResetRequests, resetPassword } from '@/api/accounts'
 
 const loading = ref(false)
 const selectedVillage = ref('全部')
@@ -164,15 +179,21 @@ const treeData = ref([
     children: [
       { label: '全部' },
       ...villages.map(v => ({ label: v })),
+      { label: '其他' },
     ],
   },
 ])
 
 const accounts = ref([])
+const resetRequests = ref([])
 
 const filteredAccounts = computed(() => {
   if (selectedVillage.value === '全部') return accounts.value
-  return accounts.value.filter(a => a.village_name === selectedVillage.value || !a.village_name)
+  if (selectedVillage.value === '其他') {
+    // 未分配村庄的账号（所属村显示为 "—"）
+    return accounts.value.filter(a => !a.village_name)
+  }
+  return accounts.value.filter(a => a.village_name === selectedVillage.value)
 })
 
 function roleTagType(role) {
@@ -208,6 +229,38 @@ async function fetchAccounts() {
     ElMessage.error('获取账号列表失败')
   } finally {
     loading.value = false
+  }
+}
+
+async function fetchResetRequests() {
+  try {
+    const res = await getResetRequests()
+    resetRequests.value = res.items || []
+  } catch (e) {
+    // 静默失败，不影响账号列表展示
+  }
+}
+
+async function handleResetRequest(row) {
+  if (!row.account_id) {
+    ElMessage.warning('该申请未关联有效账号，无法重置')
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `确认将「${row.display_name || row.username}」的密码重置为初始密码 123456？`,
+      '修改密码',
+      { type: 'warning', confirmButtonText: '确认重置', cancelButtonText: '取消' }
+    )
+  } catch {
+    return
+  }
+  try {
+    const res = await resetPassword(row.account_id)
+    ElMessage.success(`已重置为初始密码：${res.new_password}，请告知用户登录后及时修改`)
+    await fetchResetRequests()
+  } catch (e) {
+    ElMessage.error(e?.message || '重置失败')
   }
 }
 
@@ -276,6 +329,7 @@ async function addAccount() {
 
 onMounted(() => {
   fetchAccounts()
+  fetchResetRequests()
 })
 </script>
 
@@ -329,5 +383,18 @@ onMounted(() => {
   font-weight: 600;
   color: var(--color-text);
   margin: 0;
+}
+.reset-requests {
+  background: #fffbe6;
+  border: 1px solid #ffe58f;
+  border-radius: var(--radius-md);
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+.reset-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #d48806;
+  margin-bottom: 8px;
 }
 </style>

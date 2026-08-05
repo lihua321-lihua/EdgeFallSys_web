@@ -1,9 +1,17 @@
 """
 大模型服务封装 —— 阿里云 DashScope (Qwen)
+
+重构说明（Step 4）：
+  generate_health_report 增加可选 db 参数：
+    - 传入 db → 委托 ai_service.generate_health_report_v2（写 LlmCallLog 明细 + ApiUsage 聚合 + Redis 计数）
+    - 不传 db → 保持旧行为（仅 Redis 计数），向后兼容
+  generate_all_reports(db) 内部调用时传入 db，月度报告自动经 ai_service 记账。
 """
 import json
 from datetime import datetime
 from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.models import Elder, HealthReport
 from app.config import settings
 
@@ -23,8 +31,27 @@ HEALTH_REPORT_PROMPT = """你是一位专业的乡村养老健康顾问。请根
 不要使用"语速""泛音""基频"等专业术语。不要给出医疗诊断。"""
 
 
-async def generate_health_report(elder_name: str, age: int, gender: str, data_summary: str) -> str:
-    """调用 Qwen 大模型生成健康报告。失败时返回默认文本。"""
+async def generate_health_report(
+    elder_name: str,
+    age: int,
+    gender: str,
+    data_summary: str,
+    db: AsyncSession = None,
+    request_id: str = None,
+) -> str:
+    """调用 Qwen 大模型生成健康报告。失败时返回默认文本。
+
+    - 传入 db：委托 ai_service 记账（推荐，明细 + 聚合 + Redis 三层落库）
+    - 不传 db：仅 Redis 计数（旧行为，向后兼容）
+    """
+    # 有 db → 委托 ai_service（完整记账）
+    if db is not None:
+        from app.services.ai_service import generate_health_report_v2
+        return await generate_health_report_v2(
+            db, elder_name, age, gender, data_summary, request_id=request_id,
+        )
+
+    # 无 db → 旧逻辑（仅 Redis 计数，不落库）
     if not QWEN_API_KEY or QWEN_API_KEY == "your-qwen-api-key":
         return f"经系统分析，{elder_name}本月整体状况良好。建议保持现有生活习惯，关注季节变化。（大模型 API 未配置，此为默认文本）"
 
@@ -32,10 +59,7 @@ async def generate_health_report(elder_name: str, age: int, gender: str, data_su
         from dashscope import Generation
 
         prompt = HEALTH_REPORT_PROMPT.format(
-            elder_name=elder_name,
-            age=age,
-            gender=gender,
-            data_summary=data_summary,
+            elder_name=elder_name, age=age, gender=gender, data_summary=data_summary,
         )
 
         response = Generation.call(
@@ -46,12 +70,12 @@ async def generate_health_report(elder_name: str, age: int, gender: str, data_su
             api_key=QWEN_API_KEY,
         )
 
-        # Redis API 计数
+        # Redis API 计数（旧行为，仅今日计数）
         try:
             from app.services.redis_client import increment_api_counter
             await increment_api_counter("qwen", "api_calls")
-            if response.status_code == 200 and hasattr(response.output, 'usage'):
-                total = getattr(response.output.usage, 'total_tokens', 0) or 0
+            if response.status_code == 200 and hasattr(response.output, "usage"):
+                total = getattr(response.output.usage, "total_tokens", 0) or 0
                 if total:
                     await increment_api_counter("qwen", "tokens", total)
         except Exception:
@@ -71,7 +95,10 @@ async def generate_health_report(elder_name: str, age: int, gender: str, data_su
 
 
 async def generate_all_reports(db_session_factory):
-    """为所有老人生成本月 AI 报告。由 APScheduler 定时触发。"""
+    """为所有老人生成本月 AI 报告。由 Celery 定时触发。
+
+    内部以 db 会话调用 generate_health_report(db=...)，经 ai_service 完整记账。
+    """
     async with db_session_factory() as db:
         elders = (await db.execute(select(Elder))).scalars().all()
         month = datetime.now().strftime("%Y-%m")
@@ -92,9 +119,10 @@ async def generate_all_reports(db_session_factory):
             if e.medical_history:
                 data_summary += f"既往病史：{e.medical_history}。"
 
-            # 调用大模型
+            # 调用大模型（传入 db，经 ai_service 记账）
             ai_text = await generate_health_report(
-                e.name, e.age or 0, e.gender or "未知", data_summary
+                e.name, e.age or 0, e.gender or "未知", data_summary,
+                db=db, request_id=f"report:{e.elder_id}:{month}",
             )
 
             # 存储

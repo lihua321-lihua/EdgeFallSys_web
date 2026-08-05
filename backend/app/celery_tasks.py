@@ -99,11 +99,153 @@ def generate_single_report(self, elder_id: str):
                     if elder.medical_history:
                         data_summary += f"既往病史：{elder.medical_history}。"
                     return await generate_health_report(
-                        elder.name, elder.age or 0, elder.gender or "未知", data_summary
+                        elder.name, elder.age or 0, elder.gender or "未知", data_summary,
+                        db=db, request_id=f"single:{elder_id}",
                     )
             finally:
                 await engine.dispose()
 
         return asyncio.run(_do())
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+# ============ Step 8 新增任务：用量归档 / 告警分类 / 萤石健康检查 ============
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
+def archive_api_usage_daily(self):
+    """每日凌晨归档：重置 qwen today 字段，从 LlmCallLog 重算 week/month 滚动窗口。
+
+    纠正平时累加产生的漂移；Redis 今日计数按日期 key 自然隔离，无需清理。
+    """
+    try:
+        from datetime import datetime, timedelta
+
+        async def _do():
+            engine, factory = _make_session()
+            try:
+                async with factory() as db:
+                    from sqlalchemy import select, func
+                    from app.models import ApiUsage, LlmCallLog
+
+                    today = datetime.now().strftime("%Y-%m-%d")
+                    week_start = (datetime.now() - timedelta(days=6)).strftime("%Y-%m-%d")
+                    month_start = (datetime.now() - timedelta(days=29)).strftime("%Y-%m-%d")
+
+                    week_tokens = (await db.execute(
+                        select(func.coalesce(func.sum(LlmCallLog.total_tokens), 0))
+                        .where(LlmCallLog.created_date >= week_start)
+                    )).scalar() or 0
+                    month_tokens = (await db.execute(
+                        select(func.coalesce(func.sum(LlmCallLog.total_tokens), 0))
+                        .where(LlmCallLog.created_date >= month_start)
+                    )).scalar() or 0
+
+                    record = (await db.execute(
+                        select(ApiUsage).where(ApiUsage.service_name == "qwen")
+                    )).scalar_one_or_none()
+                    if record is None:
+                        record = ApiUsage(service_name="qwen", record_date=today)
+                        db.add(record)
+                    record.record_date = today
+                    record.calls_today = 0
+                    record.api_calls_today = 0
+                    record.tokens_today = 0
+                    record.cost_estimate = 0.0
+                    record.tokens_week = week_tokens
+                    record.tokens_month = month_tokens
+                    await db.commit()
+            finally:
+                await engine.dispose()
+
+        asyncio.run(_do())
+        print("[Celery] API 用量日归档完成")
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=30)
+def classify_alert_task(self, event_id: str, alert_type: str, alert_text: str = "", elder_context: str = ""):
+    """异步告警分类：调大模型分析，写回 Alert.ai_diagnosis。
+
+    事件触发（由 /ingest 调 delay），不进 beat 排期。
+    Key 未配置时降级为规则分类，仍写回 ai_diagnosis。
+    """
+    try:
+        async def _do():
+            engine, factory = _make_session()
+            try:
+                async with factory() as db:
+                    from app.services.ai_service import classify_alert
+                    result = await classify_alert(
+                        db, alert_type=alert_type, alert_text=alert_text,
+                        elder_context=elder_context, request_id=event_id,
+                    )
+                    from app.models import Alert
+                    from sqlalchemy import select as _select
+                    alert = (await db.execute(
+                        _select(Alert).where(Alert.event_id == event_id)
+                    )).scalar_one_or_none()
+                    if alert:
+                        category = result.get("category", "")
+                        suggestion = result.get("suggestion", "")
+                        alert.ai_diagnosis = f"【{category}】{suggestion}" if category else suggestion
+                    await db.commit()
+            finally:
+                await engine.dispose()
+
+        asyncio.run(_do())
+        print(f"[Celery] 告警 {event_id} 分类完成")
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=60)
+def generate_rescue_briefing_task(self, event_id: str, elder_id: str, fall_data: dict, confidence: float = 0.0):
+    """异步生成跌倒救援简报：调大模型生成 9 模块 JSON，落库 AiAnalysisReport + 写 JSON/TXT 文件。
+
+    事件触发（由 /ingest 在 type=FALL_DETECTED 且 confidence≥阈值 时调 delay），不进 beat 排期。
+    断网/Key 未配置/置信度不足/超限均走本地模板兜底，不报错。
+    """
+    try:
+        async def _do():
+            engine, factory = _make_session()
+            try:
+                async with factory() as db:
+                    from app.services.ai_service import generate_rescue_briefing
+                    await generate_rescue_briefing(
+                        db, elder_id=elder_id, fall_data=fall_data,
+                        request_id=event_id, event_id=event_id,
+                        confidence=confidence,
+                    )
+                    await db.commit()
+            finally:
+                await engine.dispose()
+
+        asyncio.run(_do())
+        print(f"[Celery] 跌倒事件 {event_id} 救援简报生成完成")
+    except Exception as exc:
+        self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=1, default_retry_delay=60)
+def ezviz_health_check(self):
+    """萤石凭证健康检查：已配置则调一次 get_device_list 产生真实计数 + 验证凭证。
+
+    03:00 定时触发；凭证无效时打印告警，不影响系统运行。
+    """
+    try:
+        async def _do():
+            from app.services.ezviz_client import _is_configured, get_device_list
+            if not _is_configured():
+                print("[Celery] 萤石未配置，跳过健康检查")
+                return
+            res = await get_device_list(page_size=1)
+            if res.get("code") == "200":
+                print("[Celery] 萤石凭证有效，设备列表获取成功")
+            else:
+                print(f"[Celery] 萤石凭证异常或无设备: {res.get('msg', res)}")
+
+        asyncio.run(_do())
     except Exception as exc:
         self.retry(exc=exc)

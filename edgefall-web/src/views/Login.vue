@@ -22,7 +22,7 @@
           <a class="forgot-link" @click="showResetDialog = true">忘记密码</a>
         </div>
 
-        <el-form-item label="身份选择（仅提示，实际权限由系统判定）">
+        <el-form-item label="身份选择（需与账号实际角色一致）">
           <el-radio-group v-model="form.roleHint" class="role-group">
             <el-radio-button value="village_grid">村级网格员</el-radio-button>
             <el-radio-button value="village_doctor">村医</el-radio-button>
@@ -42,18 +42,22 @@
   </div>
 
   <!-- 忘记密码弹窗 -->
-  <el-dialog v-model="showResetDialog" title="找回密码" width="400px" :close-on-click-modal="false">
+  <el-dialog v-model="showResetDialog" title="找回密码" width="420px" :close-on-click-modal="false">
     <el-form label-position="top">
       <el-form-item label="用户名">
         <el-input v-model="resetForm.username" placeholder="请输入用户名" />
       </el-form-item>
-      <el-form-item label="联系邮箱">
-        <el-input v-model="resetForm.email" placeholder="请输入注册时绑定的邮箱" />
-      </el-form-item>
     </el-form>
+    <el-alert
+      type="info"
+      :closable="false"
+      show-icon
+      title="账号由管理员统一分配，暂不支持邮箱自助找回。"
+      description="请提交重置请求并联系管理员在「组织架构」中重置密码，重置后初始密码为 123456，登录后请及时修改。"
+    />
     <template #footer>
       <el-button @click="showResetDialog = false">取消</el-button>
-      <el-button type="primary" @click="handleResetPassword" :loading="resetLoading">提交重置</el-button>
+      <el-button type="primary" @click="handleResetPassword" :loading="resetLoading">提交重置请求</el-button>
     </template>
   </el-dialog>
 </template>
@@ -67,6 +71,7 @@ import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ElMessage } from 'element-plus'
 import AppLogo from '@/components/AppLogo.vue'
+import { forgotPassword } from '@/api/auth'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -77,7 +82,7 @@ const rememberMe = ref(false)
 const showResetDialog = ref(false)
 const resetLoading = ref(false)
 
-const resetForm = reactive({ username: '', email: '' })
+const resetForm = reactive({ username: '' })
 
 const form = reactive({
   username: '',
@@ -109,9 +114,11 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    await authStore.login(form.username, form.password, form.roleHint)
+    // remember 传入 store：勾选→token 存 localStorage（跨浏览器重启），
+    // 未勾选→token 存 sessionStorage（关闭浏览器即失效）
+    await authStore.login(form.username, form.password, form.roleHint, rememberMe.value)
 
-    // 记住登录状态
+    // 记住登录：仅保存用户名/角色用于下次预填（token 持久化已由 store 按 remember 处理）
     if (rememberMe.value) {
       localStorage.setItem('edgefall_remember', JSON.stringify({
         username: form.username,
@@ -121,35 +128,44 @@ async function handleLogin() {
       localStorage.removeItem('edgefall_remember')
     }
 
+    // 首次登录 / 密码被管理员重置后，强制跳转修改密码页
+    if (authStore.mustChangePassword) {
+      ElMessage.warning('首次登录或密码已被重置，请先修改密码')
+      router.push('/change-password')
+      return
+    }
+
     const role = authStore.role
-    if (['admin', 'super_admin'].includes(role)) {
+    // P0: 按角色跳转到对应端
+    if (role === 'admin' || role === 'super_admin') {
       router.push('/admin/dashboard')
+    } else if (role === 'village_doctor') {
+      router.push('/doctor/alert-board')
     } else {
-      router.push('/village/alert-board')
+      // village_grid 默认
+      router.push('/grid/alert-board')
     }
     ElMessage.success(`欢迎，${authStore.displayName}`)
   } catch (e) {
-    ElMessage.error(e.message || '登录失败，请检查用户名和密码')
+    // 错误提示统一由 request.js 拦截器处理（含角色不符、密码错误等明细）
   } finally {
     loading.value = false
   }
 }
 
 async function handleResetPassword() {
-  if (!resetForm.username || !resetForm.email) {
-    ElMessage.warning('请填写用户名和邮箱')
+  if (!resetForm.username) {
+    ElMessage.warning('请输入用户名')
     return
   }
   resetLoading.value = true
   try {
-    // Mock 环境：模拟提交成功
-    await new Promise(resolve => setTimeout(resolve, 800))
-    ElMessage.success('重置链接已发送至您的邮箱，请查收')
+    const res = await forgotPassword(resetForm.username)
+    ElMessage.success(res.message || '重置请求已提交，请联系管理员处理')
     showResetDialog.value = false
     resetForm.username = ''
-    resetForm.email = ''
   } catch (e) {
-    ElMessage.error('提交失败，请重试')
+    // 错误提示由 request.js 拦截器统一处理
   } finally {
     resetLoading.value = false
   }

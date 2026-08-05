@@ -1,13 +1,13 @@
 <template>
   <div class="page-visit-tasks">
     <div class="page-title-row">
-      <h2>关怀走访任务清单</h2>
+      <h2>{{ pageTitle }}</h2>
     </div>
 
     <!-- 状态筛选 -->
     <el-radio-group v-model="filter" class="filter-tabs" @change="handleFilter">
       <el-radio-button value="all">全部 ({{ tasks.length }})</el-radio-button>
-      <el-radio-button value="pending">待走访 ({{ pendingCount }})</el-radio-button>
+      <el-radio-button value="pending">待{{ taskLabel }} ({{ pendingCount }})</el-radio-button>
       <el-radio-button value="completed">已完成 ({{ completedCount }})</el-radio-button>
     </el-radio-group>
 
@@ -21,7 +21,7 @@
         <div class="task-header">
           <span class="task-id">#{{ task.task_id }}</span>
           <el-tag :type="task.status === 'completed' ? 'success' : 'danger'" size="small">
-            {{ task.status === 'completed' ? '已完成' : '待走访' }}
+            {{ task.status === 'completed' ? '已完成' : '待' + taskLabel }}
           </el-tag>
         </div>
         <div class="task-elder">👤 {{ task.elder_name }}</div>
@@ -41,21 +41,21 @@
       </div>
     </div>
 
-    <EmptyState v-else icon="📋" text="暂无走访任务" />
+    <EmptyState v-else :icon="'📋'" :text="'暂无' + taskLabel + '任务'" />
   </div>
 
   <!-- 反馈弹窗 -->
   <el-dialog
     v-model="dialogVisible"
-    :title="'走访反馈 - ' + currentTask?.elder_name"
+    :title="feedbackDialogTitle"
     width="480px"
     :close-on-click-modal="false"
   >
-    <p style="margin-bottom: 8px; color: var(--color-text-secondary);">请描述走访情况：</p>
+    <p style="margin-bottom: 8px; color: var(--color-text-secondary);">{{ feedbackTip }}</p>
     <el-input
       v-model="feedback"
       type="textarea"
-      placeholder="例如：老人感冒卧床，已通知村医拿药..."
+      :placeholder="feedbackPlaceholder"
       :rows="4"
     />
     <template #footer>
@@ -68,11 +68,30 @@
 <script setup>
 /**
  * 走访任务清单 - 状态筛选、反馈弹窗交互
+ * P0 修正：按角色分化文案
+ *   - 网格员：走访任务（巡查类）
+ *   - 村医：随访任务（随访类）
+ * 后端已按角色过滤 task_type，前端仅做文案适配
  */
 import { ref, computed, onMounted } from 'vue'
 import { getVisitTasks, submitTaskFeedback } from '@/api/tasks'
+import { useAuthStore } from '@/store/useAuthStore'
 import { ElMessage } from 'element-plus'
 import EmptyState from '@/components/EmptyState.vue'
+
+const authStore = useAuthStore()
+
+// P0: 角色文案
+const isDoctor = computed(() => authStore.role === 'village_doctor')
+const taskLabel = computed(() => isDoctor.value ? '随访' : '走访')
+const pageTitle = computed(() => isDoctor.value ? '健康随访任务清单' : '关怀走访任务清单')
+const feedbackDialogTitle = computed(() => `${taskLabel.value}反馈 - ${currentTask.value?.elder_name || ''}`)
+const feedbackTip = computed(() => isDoctor.value ? '请描述随访情况：' : '请描述走访情况：')
+const feedbackPlaceholder = computed(() =>
+  isDoctor.value
+    ? '例如：血压 140/90，血糖正常，已调整用药方案...'
+    : '例如：老人感冒卧床，已通知村医拿药...'
+)
 
 const tasks = ref([])
 const filter = ref('all')
@@ -118,7 +137,7 @@ async function submitFeedback() {
     currentTask.value.feedback = feedback.value
     dialogVisible.value = false
   } catch (e) {
-    ElMessage.error('提交失败，请重试')
+    // 错误明细（如"任务已完成，不可重复提交"）由 request.js 拦截器统一提示
   } finally {
     submitting.value = false
   }

@@ -102,6 +102,8 @@ docker-compose.override.yml
 *.sqlite3
 *.db
 *.sql.bak
+*.db.bak
+*.bak
 
 # ========================
 # TDengine

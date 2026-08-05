@@ -3,7 +3,7 @@
     "task_id": "TASK-001",
     "elder_name": "张奶奶",
     "elder_id": "ELD_101",
-    "trigger_reason": "系统检测到老人连续3天门磁未触发（未出门），可能存在健康风险，建议上门查看。",
+    "trigger_reason": "系统检测到老人连续3天门磁未触发（未出门），可能存在健康风险，建议上门随访查看身体状况。",
     "status": "pending",
     "create_time": "2026-05-20 08:00"
   },
@@ -11,7 +11,7 @@
     "task_id": "TASK-002",
     "elder_name": "王大爷",
     "elder_id": "ELD_102",
-    "trigger_reason": "系统检测到老人近一周UWB轨迹极度单一（仅在卧室-卫生间往返），社交活跃度异常降低。",
+    "trigger_reason": "网格员巡查发现老人家中水电费异常，需上门核实居住情况。",
     "status": "pending",
     "create_time": "2026-05-19 10:30"
   },
@@ -19,7 +19,7 @@
     "task_id": "TASK-003",
     "elder_name": "李奶奶",
     "elder_id": "ELD_103",
-    "trigger_reason": "系统检测到老人步态异常频率增高，本月AI评估显示跌倒风险上升，建议提前干预。",
+    "trigger_reason": "系统检测到老人步态异常频率增高，本月AI健康评估显示跌倒风险上升，建议村医上门随访评估。",
     "status": "pending",
     "create_time": "2026-05-18 14:15"
   },
@@ -27,18 +27,84 @@
     "task_id": "TASK-004",
     "elder_name": "赵爷爷",
     "elder_id": "ELD_105",
-    "trigger_reason": "系统检测到老人连续5天未外出，已上门走访确认：老人因天气炎热居家纳凉，身体状态良好。",
+    "trigger_reason": "网格员例行巡查：老人连续5天未外出，已上门走访确认老人因天气炎热居家纳凉，身体状态良好。",
     "status": "completed",
     "create_time": "2026-05-15 09:00",
-    "feedback": "老人因天气炎热居家纳凉，身体状态良好"
+    "feedback": "老人因天气炎热居家纳凉，身体状态良好，已叮嘱注意防暑降温",
+    "handler_name": "张网格员",
+    "handle_time": "2026-05-15 10:20"
   },
   {
     "task_id": "TASK-005",
     "elder_name": "钱奶奶",
     "elder_id": "ELD_106",
-    "trigger_reason": "系统检测到UWB轨迹异常波动，已上门走访确认：老人感冒卧床，已通知村医拿药，目前恢复良好。",
+    "trigger_reason": "村医定期随访：老人感冒卧床，需上门送药并监测血压恢复情况。",
     "status": "completed",
     "create_time": "2026-05-10 16:45",
-    "feedback": "老人感冒卧床，已通知村医拿药，目前恢复良好"
+    "feedback": "老人感冒已好转，血压 130/85 恢复正常，已调整用药方案，嘱多休息",
+    "handler_name": "李村医",
+    "handle_time": "2026-05-10 18:05"
+  },
+  {
+    "task_id": "TASK-006",
+    "elder_name": "张奶奶",
+    "elder_id": "ELD_101",
+    "trigger_reason": "网格员巡查：老人反映家中水管漏水，需协调维修并确认居住安全。",
+    "status": "pending",
+    "create_time": "2026-05-21 09:30"
+  },
+  {
+    "task_id": "TASK-007",
+    "elder_name": "王大爷",
+    "elder_id": "ELD_102",
+    "trigger_reason": "村医慢病随访：老人高血压用药依从性差，需上门指导用药并监测血压。",
+    "status": "pending",
+    "create_time": "2026-05-21 14:00"
+  },
+  {
+    "task_id": "TASK-008",
+    "elder_name": "李奶奶",
+    "elder_id": "ELD_103",
+    "trigger_reason": "网格员巡查：邻居反映老人近期情绪低落，需上门关怀了解情况。",
+    "status": "pending",
+    "create_time": "2026-05-22 08:45"
+  },
+  {
+    "task_id": "TASK-009",
+    "elder_name": "钱奶奶",
+    "elder_id": "ELD_106",
+    "trigger_reason": "村医健康体检：老人糖尿病需每月定期监测血糖，安排上门采血检测。",
+    "status": "pending",
+    "create_time": "2026-05-22 10:15"
+  },
+  {
+    "task_id": "TASK-010",
+    "elder_name": "赵爷爷",
+    "elder_id": "ELD_105",
+    "trigger_reason": "网格员巡查：确认老人防滑垫铺设情况及居家环境安全检查。",
+    "status": "completed",
+    "create_time": "2026-05-08 11:00",
+    "feedback": "防滑垫已铺设到位，居家环境安全无隐患，老人精神状态良好",
+    "handler_name": "张网格员",
+    "handle_time": "2026-05-08 11:35"
+  },
+  {
+    "task_id": "TASK-011",
+    "elder_name": "张奶奶",
+    "elder_id": "ELD_101",
+    "trigger_reason": "村医随访：老人情绪低落伴睡眠质量下降，需评估心理健康状况并记录。",
+    "status": "completed",
+    "create_time": "2026-05-05 15:00",
+    "feedback": "老人因子女长期不在身边情绪低落，已进行心理疏导，建议家属增加电话联系频率，睡眠状况持续关注",
+    "handler_name": "李村医",
+    "handle_time": "2026-05-05 16:20"
+  },
+  {
+    "task_id": "TASK-012",
+    "elder_name": "李奶奶",
+    "elder_id": "ELD_103",
+    "trigger_reason": "村医用药指导：老人多种慢病用药需定期复核，避免药物相互作用风险。",
+    "status": "pending",
+    "create_time": "2026-05-23 09:00"
   }
 ]

@@ -63,18 +63,26 @@
 <script setup>
 /**
  * 老人名册 - 搜索筛选、分页、风险标签、行点击跳转详情
+ * P0 修正：行点击按角色跳转到 /grid 或 /doctor 端的详情页
  */
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { getElders } from '@/api/elders'
+import { useAuthStore } from '@/store/useAuthStore'
 
 const router = useRouter()
+const authStore = useAuthStore()
 
 const elders = ref([])
 const keyword = ref('')
 const currentPage = ref(1)
 const pageSize = 10
 const totalCount = ref(0)
+
+// P0: 按角色决定详情页路由前缀
+const detailPrefix = computed(() => {
+  return authStore.role === 'village_doctor' ? '/doctor/elder-detail' : '/grid/elder-detail'
+})
 
 const filteredList = computed(() => {
   if (!keyword.value) return elders.value
@@ -110,7 +118,7 @@ async function loadElders() {
 }
 
 function handleRowClick(row) {
-  router.push(`/village/elder-detail/${row.elder_id}`)
+  router.push(`${detailPrefix.value}/${row.elder_id}`)
 }
 
 onMounted(() => {

@@ -11,6 +11,6 @@ export function rebindDevice(data) {
   return request.post('/devices/rebind', data)
 }
 
-export function getApiUsage() {
-  return request.get('/system/api-usage')
+export function getApiUsage(timeRange = 'day') {
+  return request.get('/system/api-usage', { params: { time_range: timeRange } })
 }

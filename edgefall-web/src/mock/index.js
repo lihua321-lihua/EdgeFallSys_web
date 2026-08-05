@@ -34,12 +34,21 @@ const mockMap = {
       const user = mockAccounts[role] || mockAccounts.village_grid
       return {
         token: 'mock-jwt-token-eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock',
+        must_change_password: false,
         user,
       }
     },
   },
   '/auth/me': {
     GET: mockAccounts.village_grid,
+  },
+  '/auth/forgot-password': {
+    POST: () => ({
+      message: '如需重置密码，请联系系统管理员。管理员重置后初始密码为 123456，登录后请及时修改。',
+    }),
+  },
+  '/auth/change-password': {
+    POST: () => ({ message: '密码修改成功' }),
   },
   '/alerts': { GET: alerts },
   '/elders': { GET: { items: elders, total: elders.length } },

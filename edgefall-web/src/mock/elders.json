@@ -58,5 +58,41 @@
     "emergency_contact": "135****7890",
     "device_status": "ONLINE",
     "risk_tags": ["活动量减少"]
+  },
+  {
+    "elder_id": "ELD_201",
+    "name": "孙爷爷",
+    "age": 79,
+    "gender": "男",
+    "address": "杨柳村2组",
+    "device_sn": "WB-101",
+    "gateway_sn": "GW-B01",
+    "emergency_contact": "138****2222",
+    "device_status": "ONLINE",
+    "risk_tags": ["高血压高危", "用药不规律"]
+  },
+  {
+    "elder_id": "ELD_202",
+    "name": "周奶奶",
+    "age": 76,
+    "gender": "女",
+    "address": "杨柳村1组",
+    "device_sn": "WB-102",
+    "gateway_sn": "GW-B01",
+    "emergency_contact": "139****3333",
+    "device_status": "ONLINE",
+    "risk_tags": ["糖尿病", "血糖波动大"]
+  },
+  {
+    "elder_id": "ELD_203",
+    "name": "吴大爷",
+    "age": 84,
+    "gender": "男",
+    "address": "杨柳村3组",
+    "device_sn": "WB-103",
+    "gateway_sn": "GW-B02",
+    "emergency_contact": "137****4444",
+    "device_status": "OFFLINE",
+    "risk_tags": ["独居老人", "跌倒高风险"]
   }
 ]

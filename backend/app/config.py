@@ -20,6 +20,10 @@ class Settings(BaseSettings):
     jwt_secret_key: str = ""  # 必须通过 .env 或环境变量设置
     jwt_algorithm: str = "HS256"
     jwt_expire_minutes: int = 1440  # Token 有效期 24 小时
+    jwt_remember_expire_days: int = 30  # 勾选"记住登录"时 Token 有效期 30 天
+
+    # 账号默认初始密码（管理员创建账号 / 重置密码时使用）
+    default_password: str = "123456"
 
     # 应用
     app_name: str = "EdgeFallSys"
@@ -29,6 +33,16 @@ class Settings(BaseSettings):
     # 大模型（阿里云 DashScope）
     qwen_api_key: str = ""
     qwen_model_name: str = "qwen-max"
+    # 计费与限额（元/千token），qwen-max 官方价 0.04/0.12；超日限降级返回默认文本
+    qwen_price_input_per_1k: float = 0.04
+    qwen_price_output_per_1k: float = 0.12
+    qwen_daily_token_limit: int = 5000
+
+    # 专业 AI 分析报告（救援简报 / 长期健康分析）
+    # 跌倒置信度阈值：低于此值或断网/Key 未配置/超限均走本地模板兜底，不调大模型
+    ai_report_fall_confidence_threshold: float = 0.85
+    # JSON/TXT 文件存档目录（相对 backend 工作目录）
+    ai_report_storage_dir: str = "data/ai_reports"
 
     # 萤石开放平台
     ezviz_app_key: str = ""
@@ -90,3 +104,6 @@ if not settings.jwt_secret_key:
 
 # 确保 data 目录存在
 Path("data").mkdir(exist_ok=True)
+
+# 确保 AI 分析报告存档目录存在（救援简报 / 长期健康分析 JSON+TXT 文件）
+Path(settings.ai_report_storage_dir).mkdir(parents=True, exist_ok=True)

@@ -9,14 +9,47 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import WebSocket, WebSocketDisconnect
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, alerts, elders, tasks, devices, accounts, organization, iot_data
+from app.routers import auth, alerts, elders, tasks, devices, accounts, organization, iot_data, ai
 from app.services.ws_manager import ws_manager
+
+
+async def _enforce_default_password_change():
+    """首次登录强制改密：将仍使用默认密码的账号标记为 must_change_password=1。
+
+    存量账号在 must_change_password 列以 DEFAULT 0 补齐到历史库时，被统一置为 0，
+    导致即使仍使用默认密码也不会被强制改密。此处幂等修正：凡密码仍为默认密码
+    且未被标记的账号，强制下次登录改密。账号改密后密码不再是默认值，不会被重新标记。
+    """
+    from app.routers.auth import pwd_context
+    from app.models import Account
+    from app.config import settings
+    from sqlalchemy import select
+    from app.database import async_session
+
+    async with async_session() as db:
+        accounts = (await db.execute(
+            select(Account).where(Account.must_change_password == 0)
+        )).scalars().all()
+        flagged = 0
+        for a in accounts:
+            try:
+                if pwd_context.verify(settings.default_password, a.password_hash):
+                    a.must_change_password = 1
+                    flagged += 1
+            except Exception:
+                # 密码哈希异常的账号跳过，不阻断启动
+                continue
+        if flagged:
+            await db.commit()
+            print(f"[INIT] {flagged} 个使用默认密码的账号已标记为需强制改密")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期：启动时建表 + 启动定时任务，关闭时清理"""
     await init_db()
+    # 修正存量账号：仍使用默认密码的强制下次登录改密
+    await _enforce_default_password_change()
 
     # 初始化 TDengine
     try:
@@ -109,6 +142,7 @@ app.include_router(devices.router)
 app.include_router(accounts.router)
 app.include_router(organization.router)
 app.include_router(iot_data.router)
+app.include_router(ai.router)
 
 
 # ============ WebSocket 告警推送端点 ============

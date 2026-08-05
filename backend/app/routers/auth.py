@@ -9,21 +9,26 @@ from jose import jwt
 from passlib.context import CryptContext
 
 from app.database import get_db
-from app.models import Account, Village
+from app.models import Account, Village, PasswordResetRequest
 from app.config import settings
-from app.schemas import LoginRequest
+from app.schemas import LoginRequest, ChangePasswordRequest, ForgotPasswordRequest
 
 router = APIRouter(prefix="/api/v1/admin/auth", tags=["认证"])
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 
-def create_jwt(user_id: int, role: str, village_id: int | None) -> str:
-    """生成 JWT Token，payload 含用户 ID、角色、村庄 ID"""
+def create_jwt(user_id: int, role: str, village_id: int | None, remember: bool = False) -> str:
+    """生成 JWT Token。remember=True 时有效期延长至 jwt_remember_expire_days 天。"""
+    if remember:
+        delta = timedelta(days=settings.jwt_remember_expire_days)
+    else:
+        delta = timedelta(minutes=settings.jwt_expire_minutes)
     payload = {
         "sub": str(user_id),
         "role": role,
         "village_id": village_id,
-        "exp": datetime.now(timezone.utc) + timedelta(minutes=settings.jwt_expire_minutes),
+        "remember": remember,
+        "exp": datetime.now(timezone.utc) + delta,
     }
     return jwt.encode(payload, settings.jwt_secret_key, algorithm=settings.jwt_algorithm)
 
@@ -40,14 +45,22 @@ async def login(req: LoginRequest, db: AsyncSession = Depends(get_db)):
     if account.status == "disabled":
         raise HTTPException(status_code=401, detail="账号已被禁用")
 
-    # 2. 签发 Token
-    token = create_jwt(account.id, account.role, account.village_id)
+    # 1.5 校验所选身份与账号实际角色一致，防止越权选择其它身份登录
+    if req.roleHint and req.roleHint != account.role:
+        raise HTTPException(
+            status_code=403,
+            detail=f"所选身份与该账号角色不符（账号角色：{account.role}），请重新选择",
+        )
+
+    # 2. 签发 Token（remember 控制有效期：勾选→长有效期，未勾选→短有效期）
+    token = create_jwt(account.id, account.role, account.village_id, req.remember)
 
     # 3. 返回（字段名与前端 useAuthStore.js 完全对齐）
     return {
         "code": 200,
         "data": {
             "token": token,
+            "must_change_password": bool(account.must_change_password),
             "user": {
                 "id": account.id,
                 "username": account.username,
@@ -139,3 +152,50 @@ def require_roles(*allowed_roles: str):
 async def logout(user=Depends(get_current_user)):
     """登出：前端清除本地 Token 即可。"""
     return {"code": 200, "data": {"message": "已登出"}}
+
+
+# ==================== 密码管理 ====================
+
+@router.post("/change-password")
+async def change_password(
+    req: ChangePasswordRequest,
+    user: Account = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    """自助修改密码 —— 所有登录用户可用。
+    校验原密码后更新为新密码，并清除 must_change_password 标记。"""
+    if not pwd_context.verify(req.old_password, user.password_hash):
+        raise HTTPException(status_code=400, detail="原密码错误")
+    if req.old_password == req.new_password:
+        raise HTTPException(status_code=400, detail="新密码不能与原密码相同")
+    user.password_hash = pwd_context.hash(req.new_password)
+    user.must_change_password = 0
+    await db.flush()
+    return {"code": 200, "data": {"message": "密码修改成功"}}
+
+
+@router.post("/forgot-password")
+async def forgot_password(
+    req: ForgotPasswordRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """忘记密码 —— 不发邮件、不直接重置（账号由管理员统一分配，无邮箱采集）。
+    若用户名存在则记录一条重置申请（管理员在「组织架构」页可见并处理）；
+    无论用户名是否存在均返回相同文案，避免用户名枚举。"""
+    now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    account = (await db.execute(select(Account).where(Account.username == req.username))).scalar_one_or_none()
+    if account:
+        db.add(PasswordResetRequest(
+            account_id=account.id,
+            username=account.username,
+            display_name=account.display_name,
+            requested_at=now,
+            status="pending",
+        ))
+        await db.flush()
+    return {
+        "code": 200,
+        "data": {
+            "message": f"重置申请已提交，请联系管理员处理。管理员重置后初始密码为 {settings.default_password}，登录后请及时修改。"
+        },
+    }

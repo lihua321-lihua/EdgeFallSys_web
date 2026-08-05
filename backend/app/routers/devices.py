@@ -2,11 +2,12 @@
 设备与系统 - 设备列表（类型筛选）、设备换绑、API用量监控
 """
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.database import get_db
-from app.models import Device, ApiUsage, Elder
+from app.models import Device, ApiUsage, Elder, LlmCallLog
 from app.routers.auth import get_current_user, require_roles
 from app.schemas import RebindRequest
 from app.services.rbac import apply_village_filter
@@ -91,30 +92,41 @@ async def rebind_device(
 # ========== API 用量 ==========
 @router.get("/system/api-usage")
 async def get_api_usage(
+    time_range: str = "day",
     db: AsyncSession = Depends(get_db),
     user = Depends(get_current_user),
 ):
-    """前端 Dashboard.vue:129: apiUsage.value = apiRes.value"""
+    """前端 ApiMonitor.vue: API 用量监控（真实数据，无假数据）
+
+    time_range: day/week/month，影响 token_trend 天数范围（7/14/30 天）。
+    数据来源：ApiUsage 表（聚合）+ Redis（实时计数）+ LlmCallLog（明细统计/趋势）。
+    """
+    from datetime import datetime, timedelta
+    from app.services import ai_service
+
     result = await db.execute(select(ApiUsage))
     records = result.scalars().all()
 
-    ezviz = {"calls_today": 0, "limit_daily": 5000}
+    ezviz = {"calls_today": 0, "limit_daily": 5000, "status": "未接入"}
     llm = {
         "tokens_today": 0, "tokens_week": 0, "tokens_month": 0,
         "monthly_limit": 1000000, "api_calls_today": 0,
         "latency_ms": 0, "cost_estimate_cny": 0.0,
+        "time_range": time_range,
+        "success_rate": 0.0, "error_count": 0, "avg_latency_ms": 0,
+        "qwen_configured": ai_service._is_qwen_configured(),
     }
     for r in records:
         if r.service_name == "ezviz":
-            ezviz = {"calls_today": r.calls_today or 0, "limit_daily": r.limit_daily or 5000}
+            ezviz = {"calls_today": r.calls_today or 0, "limit_daily": r.limit_daily or 5000, "status": "未接入"}
         elif r.service_name == "qwen":
-            llm = {
+            llm.update({
                 "tokens_today": r.tokens_today or 0, "tokens_week": r.tokens_week or 0,
                 "tokens_month": r.tokens_month or 0, "monthly_limit": r.monthly_limit or 1000000,
                 "api_calls_today": r.api_calls_today or 0,
                 "latency_ms": r.latency_ms or 0,
                 "cost_estimate_cny": r.cost_estimate or 0.0,
-            }
+            })
 
     # Redis 实时计数覆盖数据库值
     try:
@@ -124,9 +136,53 @@ async def get_api_usage(
             llm["api_calls_today"] = qwen_redis.get("api_calls", llm["api_calls_today"])
             llm["tokens_today"] = qwen_redis.get("tokens", llm["tokens_today"])
         ezviz_redis = await get_api_counter("ezviz")
-        if ezviz_redis:
-            ezviz["calls_today"] = ezviz_redis.get("calls", ezviz["calls_today"])
+        # Redis 可用：无计数也视为今日 0 次真实调用，不回退到过期的 DB 种子值（如 1234）
+        ezviz["calls_today"] = ezviz_redis.get("calls", 0)
     except Exception:
         pass
 
-    return {"code": 200, "data": {"ezviz_api": ezviz, "llm_qwen": llm}}
+    # 萤石配置状态：已配置真实凭证 → active，否则 未接入
+    if settings.ezviz_app_key and settings.ezviz_app_key != "your-ezviz-app-key":
+        ezviz["status"] = "active"
+
+    # 今日 LlmCallLog 统计：成功率 / 错误数 / 平均延迟
+    today = datetime.now().strftime("%Y-%m-%d")
+    today_stats = (await db.execute(
+        select(func.count(LlmCallLog.id), func.avg(LlmCallLog.latency_ms))
+        .where(LlmCallLog.created_date == today)
+    )).one()
+    today_total = today_stats[0] or 0
+    llm["avg_latency_ms"] = int(today_stats[1] or llm["latency_ms"] or 0)
+    today_success = (await db.execute(
+        select(func.count(LlmCallLog.id)).where(
+            LlmCallLog.created_date == today, LlmCallLog.status == "success",
+        )
+    )).scalar() or 0
+    today_error = (await db.execute(
+        select(func.count(LlmCallLog.id)).where(
+            LlmCallLog.created_date == today,
+            LlmCallLog.status.in_(("failed", "degraded", "skipped")),
+        )
+    )).scalar() or 0
+    llm["error_count"] = today_error
+    llm["success_rate"] = round(today_success / today_total * 100, 1) if today_total else 0.0
+
+    # token_trend：按天聚合（day→7天 / week→14天 / month→30天）
+    trend_days = {"day": 7, "week": 14, "month": 30}.get(time_range, 7)
+    start_date = (datetime.now() - timedelta(days=trend_days - 1)).strftime("%Y-%m-%d")
+    trend_rows = (await db.execute(
+        select(
+            LlmCallLog.created_date,
+            func.sum(LlmCallLog.total_tokens),
+            func.count(LlmCallLog.id),
+            func.avg(LlmCallLog.latency_ms),
+        ).where(LlmCallLog.created_date >= start_date)
+        .group_by(LlmCallLog.created_date)
+        .order_by(LlmCallLog.created_date)
+    )).all()
+    token_trend = [
+        {"date": row[0], "tokens": row[1] or 0, "calls": row[2] or 0, "avg_latency_ms": int(row[3] or 0)}
+        for row in trend_rows
+    ]
+
+    return {"code": 200, "data": {"ezviz_api": ezviz, "llm_qwen": llm, "token_trend": token_trend}}

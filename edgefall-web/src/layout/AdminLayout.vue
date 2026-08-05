@@ -21,15 +21,18 @@
         <router-link to="/admin/api-monitor" class="nav-item">
           <span class="nav-icon">📡</span> API监控
         </router-link>
+        <router-link to="/admin/ai-chat" class="nav-item">
+          <span class="nav-icon">🤖</span> AI助手
+        </router-link>
       </nav>
     </aside>
     <div class="admin-main">
       <header class="admin-header">
         <div class="header-right">
           <span class="header-user"><strong>{{ authStore.displayName }}</strong> {{ roleLabel }}</span>
-          <router-link to="/village/alert-board" class="switch-link">
-            村委会端
-          </router-link>
+          <!-- P0 修正：取消 admin 直接进入村委会端的快捷链接（C-04 管理不下沉）
+               管理员如需查看基层数据，应通过 /admin/* 下的只读视图访问 -->
+          <el-button text @click="router.push('/change-password')">修改密码</el-button>
           <el-button text @click="handleLogout">退出</el-button>
         </div>
       </header>

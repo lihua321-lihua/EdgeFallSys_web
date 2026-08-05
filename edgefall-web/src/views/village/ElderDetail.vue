@@ -2,7 +2,7 @@
   <div class="page-elder-detail">
     <!-- 面包屑 -->
     <div class="breadcrumb">
-      <router-link to="/village/elder-roster">老人名册</router-link>
+      <router-link :to="rosterRoute">老人名册</router-link>
       <span class="separator">&gt;</span>
       <span class="current">{{ elder.name || '加载中...' }}</span>
     </div>
@@ -66,7 +66,19 @@
       <div>
         <!-- AI 月度评估 -->
         <div class="health-report">
-          <div class="report-title">🧠 AI 月度健康评估</div>
+          <div class="report-title">
+            🧠 AI 月度健康评估
+            <el-button
+              type="primary"
+              size="small"
+              plain
+              :loading="monthlyRegenerating"
+              @click="regenerateMonthly"
+              style="margin-left: 8px"
+            >
+              重新生成
+            </el-button>
+          </div>
           <div v-if="reportLoading" class="skeleton" style="height:80px;margin:12px 0"></div>
           <template v-else-if="aiReport">
             <div class="report-tags">
@@ -86,6 +98,52 @@
             </div>
           </template>
           <EmptyState v-else icon="📋" text="暂无AI评估报告" />
+        </div>
+
+        <!-- AI 长期健康分析报告（10 模块） -->
+        <div class="health-report" style="margin-top: var(--spacing-lg);">
+          <div class="report-title">
+            📊 AI 长期健康分析报告
+            <el-button
+              type="primary"
+              size="small"
+              plain
+              :loading="healthAnalysisLoading"
+              @click="generateHealthAnalysis"
+              style="margin-left: 8px"
+            >
+              {{ healthAnalysisReport ? '重新生成' : '生成报告' }}
+            </el-button>
+          </div>
+          <div v-if="healthAnalysisLoading" class="skeleton" style="height:80px;margin:12px 0"></div>
+          <template v-else-if="healthAnalysisReport">
+            <div class="report-tags">
+              <el-tag
+                :type="healthAnalysisReport.source === 'qwen' ? 'success' : 'info'"
+                size="small"
+              >
+                {{ healthAnalysisReport.source === 'qwen' ? 'AI 大模型生成' : '本地模板兜底' }}
+              </el-tag>
+              <span class="report-meta" style="margin-left: 8px">
+                📅 {{ healthAnalysisReport.created_at }}
+              </span>
+              <el-button-group style="margin-left: 8px">
+                <el-button size="small" @click="downloadHealthAnalysis('json')">JSON</el-button>
+                <el-button size="small" @click="downloadHealthAnalysis('txt')">TXT</el-button>
+              </el-button-group>
+            </div>
+            <el-collapse v-model="healthActiveKeys" class="health-collapse">
+              <el-collapse-item
+                v-for="(item, idx) in healthModules"
+                :key="item.key"
+                :name="item.key"
+                :title="`${idx + 1}. ${item.title}`"
+              >
+                <p class="report-text" style="margin: 0">{{ healthAnalysisReport.report[item.key] || '（无）' }}</p>
+              </el-collapse-item>
+            </el-collapse>
+          </template>
+          <EmptyState v-else icon="📊" text="点击「生成报告」进行长期健康数据分析" />
         </div>
 
         <!-- 近期活动记录 -->
@@ -118,7 +176,7 @@
 
         <!-- 返回按钮 -->
         <div style="margin-top: var(--spacing-lg);">
-          <el-button @click="$router.push('/village/elder-roster')">&larr; 返回老人名册</el-button>
+          <el-button @click="$router.push(rosterRoute)">&larr; 返回老人名册</el-button>
         </div>
       </div>
     </div>
@@ -128,18 +186,46 @@
 <script setup>
 /**
  * 老人详情 - 基础信息、AI健康评估、门磁活动时间线
+ * P0 修正：面包屑和返回按钮按角色使用 /grid 或 /doctor 前缀
  */
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { getElderDetail, getElderAiReport } from '@/api/elders'
+import { generateHealthAnalysis as generateHealthAnalysisApi, getAiReports, getAiReport, downloadAiReport, regenerateMonthlyReport } from '@/api/ai'
+import { useAuthStore } from '@/store/useAuthStore'
+import { ElMessage } from 'element-plus'
 import EmptyState from '@/components/EmptyState.vue'
 
 const route = useRoute()
+const authStore = useAuthStore()
 
 const elder = ref({})
 const aiReport = ref(null)
 const loading = ref(true)
 const reportLoading = ref(true)
+const monthlyRegenerating = ref(false)
+
+// AI 长期健康分析报告（10 模块）
+const healthAnalysisReport = ref(null)
+const healthAnalysisLoading = ref(false)
+const healthActiveKeys = ref([])
+const healthModules = [
+  { key: 'overall_assessment', title: '健康综合评估' },
+  { key: 'cardiovascular_risk', title: '心血管风险分析' },
+  { key: 'fall_root_cause', title: '跌倒深层诱因分析' },
+  { key: 'medication_compliance', title: '用药合规提醒' },
+  { key: 'activity_sleep', title: '活动/睡眠评估' },
+  { key: 'high_risk_list', title: '高危预警清单' },
+  { key: 'tiered_intervention', title: '分级干预措施' },
+  { key: 'village_doctor_followup', title: '村医随访计划' },
+  { key: 'family_care_advice', title: '子女日常关怀建议' },
+  { key: 'trend_forecast_review', title: '长期趋势预测与复查建议' },
+]
+
+// P0: 按角色返回对应端的名册路由
+const rosterRoute = computed(() => {
+  return authStore.role === 'village_doctor' ? '/doctor/elder-roster' : '/grid/elder-roster'
+})
 
 function activityType(status) {
   return { normal: 'success', warning: 'warning', danger: 'danger' }[status] || 'info'
@@ -168,11 +254,69 @@ async function loadDetail() {
     if (reportRes.status === 'fulfilled') {
       aiReport.value = reportRes.value
     }
+    // 加载最近一份长期健康分析报告（已生成则展示，未生成则空态）
+    try {
+      const list = await getAiReports({ elder_id: id, report_type: 'health_analysis', limit: 1 })
+      if (list?.items?.length) {
+        const detail = await getAiReport(list.items[0].report_id)
+        healthAnalysisReport.value = detail
+        healthActiveKeys.value = ['overall_assessment', 'high_risk_list']
+      }
+    } catch (e) {
+      // 查询失败忽略，保持空态
+    }
   } catch (e) {
     console.error('加载老人详情失败', e)
   } finally {
     loading.value = false
     reportLoading.value = false
+  }
+}
+
+// 重新生成本月 AI 月度健康评估（大模型，基于本月监测数据，覆盖固定字样）
+async function regenerateMonthly() {
+  const id = route.params.id
+  monthlyRegenerating.value = true
+  try {
+    const data = await regenerateMonthlyReport(id)
+    aiReport.value = {
+      ...aiReport.value,
+      ai_summary: data.ai_summary,
+      report_date: data.report_month,
+      data_source: '大模型生成',
+    }
+    ElMessage.success('月度健康评估已由大模型重新生成')
+  } catch (e) {
+    ElMessage.error('月度评估生成失败')
+  } finally {
+    monthlyRegenerating.value = false
+  }
+}
+
+// 生成 AI 长期健康分析报告（10 模块）
+async function generateHealthAnalysis() {
+  const id = route.params.id
+  healthAnalysisLoading.value = true
+  try {
+    const data = await generateHealthAnalysisApi({ elder_id: id, days: 30 })
+    healthAnalysisReport.value = data
+    healthActiveKeys.value = ['overall_assessment', 'high_risk_list']
+    ElMessage.success('健康分析报告已生成')
+  } catch (e) {
+    ElMessage.error('健康分析报告生成失败')
+  } finally {
+    healthAnalysisLoading.value = false
+  }
+}
+
+// 下载长期健康分析报告
+async function downloadHealthAnalysis(format) {
+  if (!healthAnalysisReport.value?.report_id) return
+  try {
+    await downloadAiReport(healthAnalysisReport.value.report_id, format)
+    ElMessage.success(`已下载 ${format.toUpperCase()} 文件`)
+  } catch (e) {
+    ElMessage.error('下载失败')
   }
 }
 
@@ -283,6 +427,8 @@ onMounted(() => {
   font-weight: 600;
   color: var(--color-text);
   margin-bottom: var(--spacing-sm);
+  display: flex;
+  align-items: center;
 }
 
 .health-report .report-tags {
@@ -299,6 +445,12 @@ onMounted(() => {
 .health-report .report-meta {
   font-size: 12px;
   color: var(--color-text-secondary);
+}
+
+.health-collapse {
+  max-height: 480px;
+  overflow-y: auto;
+  margin-top: var(--spacing-sm);
 }
 
 /* 响应式 */

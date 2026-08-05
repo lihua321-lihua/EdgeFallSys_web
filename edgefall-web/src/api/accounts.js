@@ -18,3 +18,13 @@ export function updateAccount(id, data) {
 export function toggleAccountStatus(id, data) {
   return request.patch(`/accounts/${id}/status`, data)
 }
+
+/** 密码重置申请列表（待处理） */
+export function getResetRequests() {
+  return request.get('/accounts/reset-requests')
+}
+
+/** 重置指定账号密码为默认初始密码（123456） */
+export function resetPassword(id) {
+  return request.post(`/accounts/${id}/reset-password`)
+}
