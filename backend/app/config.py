@@ -47,6 +47,7 @@ class Settings(BaseSettings):
     # 萤石开放平台
     ezviz_app_key: str = ""
     ezviz_app_secret: str = ""
+    ezviz_sign_secret: str = ""          # 萤石消息推送签名密钥（控制台配置，留空则跳过验签）
 
     # 定时任务（开发时设为 false 避免与 uvicorn --reload 冲突）
     enable_scheduler: bool = True

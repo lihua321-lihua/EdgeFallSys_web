@@ -2,6 +2,7 @@
 设备与系统 - 设备列表（类型筛选）、设备换绑、API用量监控
 """
 from fastapi import APIRouter, Depends, HTTPException
+from pydantic import BaseModel
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -52,6 +53,37 @@ async def list_devices(
         for d in devices
     ]
     return {"code": 200, "data": {"items": items, "total": len(items)}}
+
+
+# ========== 添加设备（手动录入序列号）==========
+class AddDeviceRequest(BaseModel):
+    device_sn: str
+    type: str               # BRACELET / GATEWAY / CAMERA
+    mac: str
+    village_name: str = ""
+    village_id: int = None
+
+
+@router.post("/devices")
+async def add_device(
+    req: AddDeviceRequest,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(get_current_user),
+):
+    """添加单台设备（摄像头序列号等），device_sn 即萤石设备序列号"""
+    if req.type not in ("BRACELET", "GATEWAY", "CAMERA"):
+        raise HTTPException(status_code=400, detail="设备类型无效")
+    existing = (await db.execute(select(Device).where(Device.device_sn == req.device_sn))).scalar_one_or_none()
+    if existing:
+        raise HTTPException(status_code=400, detail="设备编号已存在")
+    from datetime import datetime
+    db.add(Device(
+        device_sn=req.device_sn, type=req.type, mac=req.mac,
+        village_name=req.village_name or None, village_id=req.village_id,
+        is_online=1, create_time=datetime.now().isoformat(),
+    ))
+    await db.flush()
+    return {"code": 200, "data": {"message": "添加成功", "device_sn": req.device_sn}}
 
 
 # ========== 设备换绑 ==========

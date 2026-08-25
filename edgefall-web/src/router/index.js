@@ -139,6 +139,12 @@ const routes = [
         meta: { title: 'API监控' },
       },
       {
+        path: 'cameras',
+        name: 'Cameras',
+        component: () => import('@/views/admin/Cameras.vue'),
+        meta: { title: '摄像头监控' },
+      },
+      {
         path: 'ai-chat',
         name: 'AiChat',
         component: () => import('@/views/common/AIChat.vue'),

@@ -20,6 +20,7 @@
         @input="handleSearch"
       />
       <div class="toolbar-actions">
+        <el-button type="primary" :icon="Plus" @click="openAddDialog">添加设备</el-button>
         <el-button type="success" :icon="Upload" @click="triggerImport" :loading="importing">批量导入</el-button>
         <el-button type="warning" :icon="Download" @click="handleExport" :loading="exporting">导出CSV</el-button>
         <input
@@ -127,6 +128,32 @@
         <el-result icon="success" title="导出完成" sub-title="文件已开始下载" />
       </div>
     </el-dialog>
+
+    <!-- 添加设备对话框 -->
+    <el-dialog v-model="addDialogVisible" title="添加设备" width="440px">
+      <el-form :model="addForm" label-width="80px">
+        <el-form-item label="设备编号">
+          <el-input v-model="addForm.device_sn" placeholder="萤石序列号如 CS-C6CN-..." />
+        </el-form-item>
+        <el-form-item label="类型">
+          <el-select v-model="addForm.type" style="width: 100%">
+            <el-option label="摄像头" value="CAMERA" />
+            <el-option label="手环" value="BRACELET" />
+            <el-option label="网关" value="GATEWAY" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="MAC/编号">
+          <el-input v-model="addForm.mac" placeholder="MAC地址或序列号" />
+        </el-form-item>
+        <el-form-item label="所属村庄">
+          <el-input v-model="addForm.village_name" placeholder="可选" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="addDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="addLoading" @click="handleAdd">确定</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -135,12 +162,40 @@
  * 设备资产管理 - Tab切换、换绑弹窗、批量导入、导出CSV
  */
 import { ref, computed, onMounted } from 'vue'
-import { getDevices, rebindDevice as rebindDeviceApi } from '@/api/devices'
+import { getDevices, rebindDevice as rebindDeviceApi, addDevice } from '@/api/devices'
 import { useAuthStore } from '@/store/useAuthStore'
 import { ElMessage } from 'element-plus'
-import { Upload, Download } from '@element-plus/icons-vue'
+import { Upload, Download, Plus } from '@element-plus/icons-vue'
 
 const authStore = useAuthStore()
+
+// 添加设备（手动录入序列号）
+const addDialogVisible = ref(false)
+const addLoading = ref(false)
+const addForm = ref({ device_sn: '', type: 'CAMERA', mac: '', village_name: '' })
+
+function openAddDialog() {
+  addForm.value = { device_sn: '', type: 'CAMERA', mac: '', village_name: '' }
+  addDialogVisible.value = true
+}
+
+async function handleAdd() {
+  if (!addForm.value.device_sn || !addForm.value.mac) {
+    ElMessage.warning('设备编号和MAC不能为空')
+    return
+  }
+  addLoading.value = true
+  try {
+    await addDevice(addForm.value)
+    ElMessage.success('添加成功')
+    addDialogVisible.value = false
+    await loadDevices()
+  } catch (e) {
+    ElMessage.error(e.message)
+  } finally {
+    addLoading.value = false
+  }
+}
 
 const devices = ref([])
 const activeTab = ref('all')

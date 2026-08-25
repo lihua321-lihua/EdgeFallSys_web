@@ -11,6 +11,7 @@
     "axios": "^1.7.0",
     "echarts": "^5.6.0",
     "element-plus": "^2.8.0",
+    "ezuikit-js": "^0.7.2",
     "pinia": "^2.2.0",
     "vue": "^3.4.21",
     "vue-router": "^4.5.0"

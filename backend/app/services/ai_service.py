@@ -522,6 +522,112 @@ async def generate_health_report_v2(
         return f"经系统分析，{elder_name}本月整体状况良好。（AI 报告生成异常）"
 
 
+# ============ 告警图片视觉分析（Qwen-VL） ============
+
+IMAGE_ANALYSIS_PROMPT = """请分析这张养老监控截图，判断是否存在安全风险（如跌倒、陌生人入侵、老人异常行为等）。
+严格只返回如下JSON（不要额外文字）：
+{"labels": ["标签1"], "risk_level": "high/medium/low", "reasoning": "一句话说明"}
+labels可选值：跌倒/陌生人/聚集/正常/光线异常/其他
+risk_level：high=高危需立即处理，medium=需关注，low=正常"""
+
+
+async def analyze_alert_image(
+    db: AsyncSession,
+    image_url: str,
+    alert_type: str = "FALL_DETECTED",
+    request_id: Optional[str] = None,
+) -> dict:
+    """用 Qwen-VL 分析告警截图，返回 {labels, risk_level, reasoning}。
+
+    Key 未配置/超限/失败降级返回默认结果，不报错。
+    图片 URL 由萤石告警消息 pictureList 提供，无需下载。
+    """
+    if not _is_qwen_configured():
+        result = {"labels": ["待确认"], "risk_level": "medium", "reasoning": "大模型未配置，无法视觉分析"}
+        await _record_call(
+            db, endpoint="image_analysis", status="degraded", latency_ms=0,
+            completion_tokens=len(str(result)), total_tokens=len(str(result)),
+            error_msg="qwen api key not configured", request_id=request_id,
+        )
+        return result
+
+    if await _check_daily_limit():
+        result = {"labels": ["待确认"], "risk_level": "medium", "reasoning": "Token 日限已达，降级返回"}
+        await _record_call(
+            db, endpoint="image_analysis", status="skipped", latency_ms=0,
+            completion_tokens=len(str(result)), total_tokens=len(str(result)),
+            error_msg="daily token limit exceeded", request_id=request_id,
+        )
+        return result
+
+    start = time.time()
+    try:
+        from dashscope import MultiModalConversation
+        response = await asyncio.to_thread(
+            MultiModalConversation.call,
+            model="qwen-vl-plus",
+            messages=[{
+                "role": "user",
+                "content": [
+                    {"image": image_url},
+                    {"text": IMAGE_ANALYSIS_PROMPT},
+                ],
+            }],
+            api_key=settings.qwen_api_key,
+        )
+        latency_ms = int((time.time() - start) * 1000)
+
+        if response.status_code == 200:
+            # 提取文本（兼容不同 dashscope 版本返回结构）
+            text = ""
+            output = getattr(response, "output", None)
+            if output:
+                if getattr(output, "text", None):
+                    text = output.text
+                elif getattr(output, "choices", None):
+                    content = output.choices[0].message.content
+                    if isinstance(content, list):
+                        text = "".join(c.get("text", "") for c in content if isinstance(c, dict))
+                    elif isinstance(content, str):
+                        text = content
+            p, c, t = _usage_tokens(getattr(response, "usage", None))
+            parsed = _parse_classify_json(text)  # 复用 JSON 解析
+            if parsed and ("labels" in parsed or "risk_level" in parsed):
+                result = {
+                    "labels": parsed.get("labels", ["待确认"]) if isinstance(parsed.get("labels"), list) else [str(parsed.get("labels", "待确认"))],
+                    "risk_level": parsed.get("risk_level", "medium"),
+                    "reasoning": parsed.get("reasoning", text[:100]),
+                }
+            else:
+                result = {"labels": ["待确认"], "risk_level": "medium", "reasoning": text[:200] or "分析无结果"}
+            await _record_call(
+                db, endpoint="image_analysis", status="success", latency_ms=latency_ms,
+                prompt_tokens=p, completion_tokens=c, total_tokens=t, request_id=request_id,
+                model="qwen-vl-plus",
+            )
+            return result
+        else:
+            msg = getattr(response, "message", "视觉分析调用失败")
+            await _record_call(
+                db, endpoint="image_analysis", status="failed", latency_ms=latency_ms,
+                error_msg=msg, request_id=request_id, model="qwen-vl-plus",
+            )
+            return {"labels": ["待确认"], "risk_level": "medium", "reasoning": msg}
+    except ImportError:
+        await _record_call(
+            db, endpoint="image_analysis", status="failed", latency_ms=0,
+            error_msg="dashscope SDK 未安装", request_id=request_id,
+        )
+        return {"labels": ["待确认"], "risk_level": "medium", "reasoning": "SDK 未安装"}
+    except Exception as e:
+        latency_ms = int((time.time() - start) * 1000)
+        await _record_call(
+            db, endpoint="image_analysis", status="failed", latency_ms=latency_ms,
+            error_msg=str(e), request_id=request_id, model="qwen-vl-plus",
+        )
+        return {"labels": ["待确认"], "risk_level": "medium", "reasoning": str(e)}
+
+
 # ============================================================
 # 专业 AI 分析报告：跌倒救援简报 + 长期健康分析
 # ============================================================

@@ -249,3 +249,39 @@ def ezviz_health_check(self):
         asyncio.run(_do())
     except Exception as exc:
         self.retry(exc=exc)
+
+
+@celery_app.task(bind=True, max_retries=2, default_retry_delay=30)
+def analyze_image_task(self, event_id: str, image_url: str, alert_type: str = "FALL_DETECTED"):
+    """异步图片分析：Qwen-VL 分析萤石告警截图，写回 Alert.ai_diagnosis。
+
+    事件触发（由 Webhook /callback 调 delay），不进 beat 排期。
+    """
+    try:
+        async def _do():
+            engine, factory = _make_session()
+            try:
+                async with factory() as db:
+                    from app.services.ai_service import analyze_alert_image
+                    result = await analyze_alert_image(
+                        db, image_url=image_url, alert_type=alert_type,
+                        request_id=event_id,
+                    )
+                    from app.models import Alert
+                    from sqlalchemy import select as _select
+                    alert = (await db.execute(
+                        _select(Alert).where(Alert.event_id == event_id)
+                    )).scalar_one_or_none()
+                    if alert:
+                        labels = ", ".join(result.get("labels", []))
+                        risk = result.get("risk_level", "")
+                        reasoning = result.get("reasoning", "")
+                        alert.ai_diagnosis = f"【{labels}】【{risk}】{reasoning}"
+                    await db.commit()
+            finally:
+                await engine.dispose()
+
+        asyncio.run(_do())
+        print(f"[Celery] 图片分析完成 {event_id}")
+    except Exception as exc:
+        self.retry(exc=exc)

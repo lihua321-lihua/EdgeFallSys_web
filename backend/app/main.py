@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi import WebSocket, WebSocketDisconnect
 from app.config import settings
 from app.database import init_db
-from app.routers import auth, alerts, elders, tasks, devices, accounts, organization, iot_data, ai
+from app.routers import auth, alerts, elders, tasks, devices, accounts, organization, iot_data, ai, cameras, ezviz_webhook
 from app.services.ws_manager import ws_manager
 
 
@@ -143,6 +143,8 @@ app.include_router(accounts.router)
 app.include_router(organization.router)
 app.include_router(iot_data.router)
 app.include_router(ai.router)
+app.include_router(cameras.router)
+app.include_router(ezviz_webhook.router)
 
 
 # ============ WebSocket 告警推送端点 ============

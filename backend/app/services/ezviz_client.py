@@ -99,6 +99,34 @@ async def get_device_list(page_start: int = 0, page_size: int = 10) -> dict:
     return await call_ezviz("/device/list", {"pageStart": page_start, "pageSize": page_size})
 
 
+async def get_live_address(device_serial: str, channel_no: int = 1, protocol: int = 1) -> dict:
+    """获取取流地址。protocol: 1=ezopen(EZUIKit播放), 4=HLS, 2=RTMP。
+
+    返回 {"success": bool, "url": str, "msg": str}
+    """
+    result = await call_ezviz("/v2/live/address/get", {
+        "deviceSerial": device_serial,
+        "channelNo": channel_no,
+        "protocol": protocol,
+        "expireTime": 1800,
+    })
+    if result.get("code") == "200":
+        data = result.get("data", {})
+        return {"success": True, "url": data.get("url", ""), "msg": "ok"}
+    return {"success": False, "url": "", "msg": result.get("msg", "取流失败")}
+
+
+async def set_defence(device_serial: str, defence_on: bool = True) -> dict:
+    """设置设备布防/撤防。布防后移动侦测/人体感应才会触发告警。"""
+    result = await call_ezviz("/device/defence/set", {
+        "deviceSerial": device_serial,
+        "defenceType": 0 if defence_on else 255,
+    })
+    if result.get("code") == "200":
+        return {"success": True, "msg": "布防" if defence_on else "撤防"}
+    return {"success": False, "msg": result.get("msg", "操作失败")}
+
+
 async def record_ezviz_call(db, count: int = 1):
     """记录萤石 API 调用到 DB（ApiUsage 表，跨天重置）。
 

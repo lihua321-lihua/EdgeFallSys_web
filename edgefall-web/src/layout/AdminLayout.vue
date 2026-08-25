@@ -21,6 +21,9 @@
         <router-link to="/admin/api-monitor" class="nav-item">
           <span class="nav-icon">📡</span> API监控
         </router-link>
+        <router-link to="/admin/cameras" class="nav-item">
+          <span class="nav-icon">📷</span> 摄像头
+        </router-link>
         <router-link to="/admin/ai-chat" class="nav-item">
           <span class="nav-icon">🤖</span> AI助手
         </router-link>
